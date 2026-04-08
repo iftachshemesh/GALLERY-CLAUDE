@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ניהול גלריה</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body dir="rtl">
+<div class="admin-layout">
+  <%- include('_sidebar') %>
+  <div class="admin-main">
+    <h1 class="admin-title">לוח בקרה</h1>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1rem;">
+      <a href="/admin/upload" style="text-decoration:none">
+        <div class="admin-card" style="text-align:center; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:2.5rem; margin-bottom:0.5rem;">📤</div>
+          <div style="font-weight:500; color:var(--charcoal);">העלאת תמונות</div>
+        </div>
+      </a>
+      <a href="/admin/manage" style="text-decoration:none">
+        <div class="admin-card" style="text-align:center; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:2.5rem; margin-bottom:0.5rem;">🖼️</div>
+          <div style="font-weight:500; color:var(--charcoal);">ניהול ציורים</div>
+        </div>
+      </a>
+      <a href="/admin/about" style="text-decoration:none">
+        <div class="admin-card" style="text-align:center; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:2.5rem; margin-bottom:0.5rem;">✍️</div>
+          <div style="font-weight:500; color:var(--charcoal);">על אודות האמן</div>
+        </div>
+      </a>
+      <a href="/he/gallery" target="_blank" style="text-decoration:none">
+        <div class="admin-card" style="text-align:center; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:2.5rem; margin-bottom:0.5rem;">👁️</div>
+          <div style="font-weight:500; color:var(--charcoal);">צפייה באתר</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

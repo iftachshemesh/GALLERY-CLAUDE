@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ניהול ציורים</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+</head>
+<body dir="rtl">
+<div class="admin-layout">
+  <%- include('_sidebar') %>
+  <div class="admin-main">
+
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+      <h1 class="admin-title" style="margin-bottom:0;">ניהול ציורים</h1>
+      <a href="/admin/upload" class="btn btn-gold btn-sm">+ העלאת ציור חדש</a>
+    </div>
+
+    <div class="cat-tabs">
+      <div class="cat-tab active" onclick="filterCat('all', this)">הכל (<%= paintings.length %>)</div>
+      <div class="cat-tab" onclick="filterCat('acrylic', this)">אקריליק</div>
+      <div class="cat-tab" onclick="filterCat('pastel', this)">פסטל</div>
+      <div class="cat-tab" onclick="filterCat('charcoal', this)">פחם</div>
+      <div class="cat-tab" onclick="filterCat('other', this)">אחר</div>
+      <div class="cat-tab" onclick="filterCat('exhibitions', this)">תערוכות</div>
+    </div>
+
+    <div class="admin-card" style="padding:0; overflow:hidden;">
+      <table class="paintings-table" id="paintingsTable">
+        <thead>
+          <tr>
+            <th style="width:30px"></th>
+            <th>תמונה</th>
+            <th>כותרת עב׳</th>
+            <th>כותרת אנ׳</th>
+            <th>טכניקה</th>
+            <th>שנה</th>
+            <th>גודל</th>
+            <th>קבוצה</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="sortableTbody">
+          <% paintings.forEach(p => { %>
+          <%
+            const imgSrc = (p.filename && p.filename.startsWith('http'))
+              ? p.filename
+              : '/uploads/' + p.filename;
+          %>
+          <tr data-id="<%= p.id %>" data-cat="<%= p.category %>">
+            <td><span class="drag-handle" title="גרור לשינוי סדר">⠿</span></td>
+            <td><img src="<%= imgSrc %>" alt=""></td>
+            <td><%= p.title_he || '—' %></td>
+            <td><%= p.title_en || '—' %></td>
+            <td><%= p.technique_he || p.technique_en || '—' %></td>
+            <td><%= p.year || '—' %></td>
+            <td><%= p.size || '—' %></td>
+            <td><%= p.category %></td>
+            <td>
+              <button class="btn btn-sm btn-dark" onclick="openEdit(<%= p.id %>)">עריכה</button>
+              <form method="POST" action="/admin/delete/<%= p.id %>" style="display:inline" onsubmit="return confirm('האם למחוק?')">
+                <button type="submit" class="btn btn-sm" style="background:#e57373;color:white;border:none;">מחק</button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="saveOrderBtn" style="display:none; margin-top:1rem;">
+      <button class="btn btn-gold" onclick="saveOrder()">💾 שמור סדר חדש</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:500; align-items:center; justify-content:center;">
+  <div style="background:white; border-radius:8px; padding:2rem; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; direction:rtl;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+      <h3 style="font-size:1.4rem;">עריכת ציור</h3>
+      <button onclick="closeEdit()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--muted);">✕</button>
+    </div>
+    <form id="editForm" method="POST">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <div class="form-group">
+          <label>כותרת עברית</label>
+          <input type="text" name="title_he" id="edit_title_he" list="etitles">
+        </div>
+        <div class="form-group">
+          <label>Title English</label>
+          <input type="text" name="title_en" id="edit_title_en" list="etitles">
+        </div>
+        <div class="form-group">
+          <label>טכניקה עברית</label>
+          <input type="text" name="technique_he" id="edit_technique_he" list="etechs">
+        </div>
+        <div class="form-group">
+          <label>Technique English</label>
+          <input type="text" name="technique_en" id="edit_technique_en" list="etechs">
+        </div>
+        <div class="form-group">
+          <label>שנה</label>
+          <input type="text" name="year" id="edit_year">
+        </div>
+        <div class="form-group">
+          <label>גודל</label>
+          <input type="text" name="size" id="edit_size" list="esizes">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>קבוצה</label>
+          <select name="category" id="edit_category" style="width:100%;padding:0.75rem;border:1px solid #d9d0c0;border-radius:3px;">
+            <option value="acrylic">אקריליק</option>
+            <option value="pastel">פסטל</option>
+            <option value="charcoal">פחם</option>
+            <option value="other">אחר</option>
+            <option value="exhibitions">תערוכות וכתבות</option>
+          </select>
+        </div>
+      </div>
+      <datalist id="etitles">
+        <% (suggestions.titles||[]).forEach(t => { %><option value="<%= t %>"><% }) %>
+      </datalist>
+      <datalist id="etechs">
+        <% (suggestions.techniques||[]).forEach(t => { %><option value="<%= t %>"><% }) %>
+      </datalist>
+      <datalist id="esizes">
+        <% (suggestions.sizes||[]).forEach(s => { %><option value="<%= s %>"><% }) %>
+      </datalist>
+      <div style="display:flex; gap:1rem; margin-top:1rem;">
+        <button type="submit" class="btn btn-gold">שמור</button>
+        <button type="button" class="btn btn-dark" onclick="closeEdit()">ביטול</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const paintings = <%- JSON.stringify(paintings) %>;
+
+  const sortable = Sortable.create(document.getElementById('sortableTbody'), {
+    handle: '.drag-handle',
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    onEnd: () => { document.getElementById('saveOrderBtn').style.display = 'block'; }
+  });
+
+  function saveOrder() {
+    const rows = document.querySelectorAll('#sortableTbody tr');
+    const order = Array.from(rows).map(r => r.dataset.id);
+    fetch('/admin/reorder', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ order })
+    }).then(r => r.json()).then(d => {
+      if (d.ok) { document.getElementById('saveOrderBtn').style.display='none'; alert('הסדר נשמר!'); }
+    });
+  }
+
+  function filterCat(cat, el) {
+    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('#sortableTbody tr').forEach(tr => {
+      tr.style.display = (cat === 'all' || tr.dataset.cat === cat) ? '' : 'none';
+    });
+  }
+
+  function openEdit(id) {
+    const p = paintings.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('edit_title_he').value = p.title_he || '';
+    document.getElementById('edit_title_en').value = p.title_en || '';
+    document.getElementById('edit_technique_he').value = p.technique_he || '';
+    document.getElementById('edit_technique_en').value = p.technique_en || '';
+    document.getElementById('edit_year').value = p.year || '';
+    document.getElementById('edit_size').value = p.size || '';
+    document.getElementById('edit_category').value = p.category || 'other';
+    document.getElementById('editForm').action = '/admin/edit/' + id;
+    document.getElementById('editModal').style.display = 'flex';
+  }
+
+  function closeEdit() {
+    document.getElementById('editModal').style.display = 'none';
+  }
+
+  document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEdit();
+  });
+</script>
+</body>
+</html>

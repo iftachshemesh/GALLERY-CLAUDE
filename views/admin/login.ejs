@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>כניסת מנהל</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--dark); }
+    .login-box { background:var(--white); padding:2.5rem; border-radius:8px; width:320px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.4); }
+    .login-box h1 { font-size:1.6rem; color:var(--charcoal); margin-bottom:0.5rem; }
+    .login-box p { color:var(--muted); font-size:0.85rem; margin-bottom:2rem; }
+    .login-box input { width:100%; padding:0.75rem 1rem; border:1px solid #d9d0c0; border-radius:4px; font-size:1rem; margin-bottom:1rem; text-align:center; letter-spacing:0.3em; font-family:monospace; }
+    .login-box input:focus { outline:none; border-color:var(--gold); }
+  </style>
+</head>
+<body>
+<div class="login-box">
+  <h1>כניסת מנהל</h1>
+  <p>גלריית ד"ר יפתח שמש</p>
+  <% if (error) { %>
+  <div class="alert alert-error" style="margin-bottom:1rem;">סיסמא שגויה</div>
+  <% } %>
+  <form method="POST" action="/admin/login">
+    <input type="password" name="password" placeholder="סיסמא" autofocus>
+    <button type="submit" class="btn btn-gold" style="width:100%">כניסה</button>
+  </form>
+</div>
+</body>
+</html>

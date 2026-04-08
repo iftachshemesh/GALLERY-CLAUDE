@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= lang === 'he' ? "גלריית הציורים של ד\"ר יפתח שמש" : "Dr. Yiftach Shemesh Art Gallery" %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { overflow: hidden; }
+    @media (max-width: 600px) { body { overflow: auto; } }
+  </style>
+</head>
+<body dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+
+<nav class="site-nav">
+  <a href="/<%= lang %>" class="nav-brand">
+    <%= lang === 'he' ? 'ד"ר יפתח שמש' : 'Dr. Yiftach Shemesh' %>
+  </a>
+  <div class="nav-links">
+    <a href="/<%= lang %>/gallery"><%= lang === 'he' ? 'גלריה' : 'Gallery' %></a>
+    <a href="/<%= lang %>/exhibitions"><%= lang === 'he' ? 'תערוכות וכתבות' : 'Exhibitions' %></a>
+    <a href="/<%= lang %>/about"><%= lang === 'he' ? 'על אודות' : 'About' %></a>
+    <a href="/<%= lang %>/contact"><%= lang === 'he' ? 'צור קשר' : 'Contact' %></a>
+    <a href="/<%= lang === 'he' ? 'en' : 'he' %>" class="lang-toggle"><%= lang === 'he' ? 'EN' : 'עב' %></a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">
+      <%= lang === 'he' ? 'גלריית הציורים של ד"ר יפתח שמש' : 'Art Gallery of Dr. Yiftach Shemesh' %>
+    </h1>
+    <p class="hero-subtitle">
+      <%= lang === 'he' ? 'אקריליק · פסטל · פחם' : 'Acrylic · Pastel · Charcoal' %>
+    </p>
+    <div class="hero-buttons">
+      <a href="/<%= lang %>/gallery" class="btn btn-gold">
+        <%= lang === 'he' ? 'לגלריה' : 'View Gallery' %>
+      </a>
+      <a href="/<%= lang %>/about" class="btn btn-outline">
+        <%= lang === 'he' ? 'על האמן' : 'About the Artist' %>
+      </a>
+      <a href="/<%= lang %>/contact" class="btn btn-outline">
+        <%= lang === 'he' ? 'צור קשר' : 'Contact' %>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Legal Footer -->
+<div class="legal-footer" style="position:fixed;bottom:0;left:0;right:0;z-index:50;">
+  © <%= new Date().getFullYear() %> ד"ר יפתח שמש · כל הזכויות שמורות · All Rights Reserved
+</div>
+
+<!-- Accessibility -->
+<button class="accessibility-btn" onclick="toggleAccess()" aria-label="נגישות">♿</button>
+<div class="accessibility-panel" id="accessPanel">
+  <h4><%= lang === 'he' ? 'נגישות' : 'Accessibility' %></h4>
+  <div class="access-option">
+    <span><%= lang === 'he' ? 'הגדל טקסט' : 'Larger text' %></span>
+    <button onclick="changeFontSize(1)">A+</button>
+    <button onclick="changeFontSize(-1)">A-</button>
+  </div>
+  <div class="access-option">
+    <span><%= lang === 'he' ? 'ניגודיות' : 'Contrast' %></span>
+    <button onclick="toggleContrast()">◑</button>
+  </div>
+</div>
+
+<script>
+  // Hero background
+  const heroBg = document.getElementById('heroBg');
+  fetch('/api/hero-check').catch(() => {});
+
+  function toggleAccess() {
+    document.getElementById('accessPanel').classList.toggle('open');
+  }
+  let fontSize = 100;
+  function changeFontSize(dir) {
+    fontSize = Math.min(140, Math.max(80, fontSize + dir * 10));
+    document.body.style.fontSize = fontSize + '%';
+  }
+  function toggleContrast() {
+    document.body.classList.toggle('high-contrast');
+  }
+</script>
+</body>
+</html>

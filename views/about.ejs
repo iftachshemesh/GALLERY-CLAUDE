@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= lang === 'he' ? 'על אודות — ד"ר יפתח שמש' : 'About — Dr. Yiftach Shemesh' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+
+<nav class="site-nav">
+  <a href="/<%= lang %>" class="nav-brand"><%= lang === 'he' ? 'ד"ר יפתח שמש' : 'Dr. Yiftach Shemesh' %></a>
+  <div class="nav-links">
+    <a href="/<%= lang %>/gallery"><%= lang === 'he' ? 'גלריה' : 'Gallery' %></a>
+    <a href="/<%= lang %>/exhibitions"><%= lang === 'he' ? 'תערוכות' : 'Exhibitions' %></a>
+    <a href="/<%= lang %>/about" class="active"><%= lang === 'he' ? 'על אודות' : 'About' %></a>
+    <a href="/<%= lang %>/contact"><%= lang === 'he' ? 'צור קשר' : 'Contact' %></a>
+    <a href="/<%= lang === 'he' ? 'en' : 'he' %>/about" class="lang-toggle"><%= lang === 'he' ? 'EN' : 'עב' %></a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <h1><%= lang === 'he' ? 'על אודות האמן' : 'About the Artist' %></h1>
+  </div>
+
+  <div class="about-content">
+    <%- lang === 'he' ? (about.content_he || '<p style="color:#aaa">תוכן יתווסף בקרוב...</p>') : (about.content_en || '<p style="color:#aaa">Content coming soon...</p>') %>
+  </div>
+
+  <div class="page-actions">
+    <a href="/<%= lang %>" class="btn btn-dark">
+      <%= lang === 'he' ? '← חזרה לעמוד הבית' : '← Back to Home' %>
+    </a>
+    <button class="btn btn-dark btn-sm" onclick="toggleAccess()">♿</button>
+  </div>
+</div>
+
+<div class="legal-footer">
+  © <%= new Date().getFullYear() %> ד"ר יפתח שמש · כל הזכויות שמורות · All Rights Reserved
+</div>
+
+<button class="accessibility-btn" onclick="toggleAccess()">♿</button>
+<div class="accessibility-panel" id="accessPanel">
+  <h4><%= lang === 'he' ? 'נגישות' : 'Accessibility' %></h4>
+  <div class="access-option">
+    <span><%= lang === 'he' ? 'הגדל' : 'Larger' %></span>
+    <button onclick="changeFontSize(1)">A+</button>
+    <button onclick="changeFontSize(-1)">A-</button>
+  </div>
+  <div class="access-option">
+    <span><%= lang === 'he' ? 'ניגודיות' : 'Contrast' %></span>
+    <button onclick="toggleContrast()">◑</button>
+  </div>
+</div>
+<script>
+  function toggleAccess() { document.getElementById('accessPanel').classList.toggle('open'); }
+  let fontSize = 100;
+  function changeFontSize(d) { fontSize = Math.min(140,Math.max(80,fontSize+d*10)); document.body.style.fontSize=fontSize+'%'; }
+  function toggleContrast() { document.body.classList.toggle('high-contrast'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>העלאת תמונות</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body dir="rtl">
+<div class="admin-layout">
+  <%- include('_sidebar') %>
+  <div class="admin-main">
+
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+      <h1 class="admin-title" style="margin-bottom:0;">העלאת תמונות</h1>
+      <a href="/admin/manage" class="btn btn-dark btn-sm">← לרשימת הציורים</a>
+    </div>
+
+    <% if (saved) { %>
+    <div class="alert alert-success" style="margin-bottom:1.5rem;">✓ הקבצים הועלו בהצלחה!</div>
+    <% } %>
+
+    <div class="admin-card">
+      <form method="POST" action="/admin/upload" enctype="multipart/form-data" id="uploadForm">
+
+        <!-- Category -->
+        <div class="form-group">
+          <label>קבוצה</label>
+          <select name="category" id="categorySelect" style="width:100%;padding:0.75rem 1rem;border:1px solid #d9d0c0;border-radius:3px;font-size:0.95rem;background:white;" onchange="onCategoryChange(this.value)">
+            <option value="acrylic">אקריליק</option>
+            <option value="pastel">פסטל</option>
+            <option value="charcoal">פחם</option>
+            <option value="other">אחר</option>
+            <option value="exhibitions">תערוכות וכתבות</option>
+          </select>
+        </div>
+
+        <!-- Upload zone -->
+        <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <input type="file" id="fileInput" name="images" multiple accept="image/*" onchange="previewFiles(this)">
+          <div style="font-size:2rem; margin-bottom:0.5rem;" id="uploadIcon">📷</div>
+          <p id="uploadHint">לחץ לבחירת תמונות או גרור לכאן</p>
+          <p style="font-size:0.8rem; margin-top:0.3rem; color:var(--muted);" id="uploadSub">ניתן לבחור מספר קבצים בו זמנית</p>
+        </div>
+        <div class="upload-previews" id="previews"></div>
+
+        <hr style="margin:1.5rem 0; border-color:var(--border);">
+        <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1rem;">
+          פרטים אלה יחולו על כל הקבצים שהועלו. ניתן לערוך כל פריט בנפרד לאחר ההעלאה.
+        </p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label>כותרת (עברית)</label>
+            <input type="text" name="title_he" list="titles-list" placeholder="שם הציור / הכתבה">
+          </div>
+          <div class="form-group">
+            <label>Title (English)</label>
+            <input type="text" name="title_en" list="titles-list" placeholder="Painting / article title">
+          </div>
+          <div class="form-group">
+            <label>טכניקה (עברית)</label>
+            <input type="text" name="technique_he" list="techniques-list" placeholder="למשל: אקריליק על בד">
+          </div>
+          <div class="form-group">
+            <label>Technique (English)</label>
+            <input type="text" name="technique_en" list="techniques-list" placeholder="e.g. Acrylic on canvas">
+          </div>
+          <div class="form-group">
+            <label>שנה</label>
+            <input type="text" name="year" placeholder="2024">
+          </div>
+          <div class="form-group">
+            <label>גודל</label>
+            <input type="text" name="size" list="sizes-list" placeholder="60x80 ס״מ">
+          </div>
+        </div>
+
+        <datalist id="titles-list">
+          <% (suggestions.titles||[]).forEach(t => { %><option value="<%= t %>"><% }) %>
+        </datalist>
+        <datalist id="techniques-list">
+          <% (suggestions.techniques||[]).forEach(t => { %><option value="<%= t %>"><% }) %>
+        </datalist>
+        <datalist id="sizes-list">
+          <% (suggestions.sizes||[]).forEach(s => { %><option value="<%= s %>"><% }) %>
+        </datalist>
+
+        <div style="display:flex; gap:1rem; margin-top:1.5rem; flex-wrap:wrap;">
+          <button type="submit" class="btn btn-gold">⬆️ העלה קבצים</button>
+          <a href="/admin/manage" class="btn btn-dark">← לרשימת הציורים לעריכה</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── שינוי סוג קובץ לפי קטגוריה ──────────────────────────────────────────
+  function onCategoryChange(cat) {
+    const input = document.getElementById('fileInput');
+    const icon  = document.getElementById('uploadIcon');
+    const hint  = document.getElementById('uploadHint');
+
+    if (cat === 'exhibitions') {
+      input.accept = 'image/*,.html,.htm';
+      icon.textContent = '📄';
+      hint.textContent = 'לחץ לבחירת תמונות או קבצי HTML, או גרור לכאן';
+    } else {
+      input.accept = 'image/*';
+      icon.textContent = '📷';
+      hint.textContent = 'לחץ לבחירת תמונות או גרור לכאן';
+    }
+    // נקה תצוגה מקדימה בכל מעבר קטגוריה
+    document.getElementById('previews').innerHTML = '';
+    input.value = '';
+  }
+
+  // ── Drag & drop ──────────────────────────────────────────────────────────
+  const zone = document.getElementById('dropZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.background='#faf7ef'; });
+  zone.addEventListener('dragleave', () => zone.style.background='');
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.style.background='';
+    const dt = new DataTransfer();
+    Array.from(e.dataTransfer.files).forEach(f => dt.items.add(f));
+    const input = document.getElementById('fileInput');
+    input.files = dt.files;
+    previewFiles(input);
+  });
+
+  // ── תצוגה מקדימה ─────────────────────────────────────────────────────────
+  function previewFiles(input) {
+    const container = document.getElementById('previews');
+    container.innerHTML = '';
+
+    Array.from(input.files).forEach(file => {
+      const isImage = file.type.startsWith('image/');
+      const isHtml  = file.name.toLowerCase().endsWith('.html') || file.name.toLowerCase().endsWith('.htm');
+
+      if (isImage) {
+        // תצוגה מקדימה של תמונה
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+
+      } else if (isHtml) {
+        // תצוגה מקדימה של קובץ HTML — מציג שם קובץ בלבד
+        const box = document.createElement('div');
+        box.style.cssText = 'display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1rem;background:#f5f0e8;border:1px solid #d9d0c0;border-radius:4px;margin:0.3rem;font-size:0.9rem;';
+        box.innerHTML = `<span style="font-size:1.3rem;">📄</span><span>${file.name}</span>`;
+        container.appendChild(box);
+      }
+    });
+  }
+</script>
+</body>
+</html>

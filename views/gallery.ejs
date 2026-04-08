@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= lang === 'he' ? 'גלריה — ד"ר יפתח שמש' : 'Gallery — Dr. Yiftach Shemesh' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+
+<nav class="site-nav">
+  <a href="/<%= lang %>" class="nav-brand"><%= lang === 'he' ? 'ד"ר יפתח שמש' : 'Dr. Yiftach Shemesh' %></a>
+  <div class="nav-links">
+    <a href="/<%= lang %>/gallery" class="active"><%= lang === 'he' ? 'גלריה' : 'Gallery' %></a>
+    <a href="/<%= lang %>/exhibitions"><%= lang === 'he' ? 'תערוכות וכתבות' : 'Exhibitions' %></a>
+    <a href="/<%= lang %>/about"><%= lang === 'he' ? 'על אודות' : 'About' %></a>
+    <a href="/<%= lang %>/contact"><%= lang === 'he' ? 'צור קשר' : 'Contact' %></a>
+    <a href="/<%= lang === 'he' ? 'en' : 'he' %>/gallery" class="lang-toggle"><%= lang === 'he' ? 'EN' : 'עב' %></a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <h1><%= lang === 'he' ? 'גלריה' : 'Gallery' %></h1>
+    <p><%= lang === 'he' ? 'אקריליק · פסטל · פחם' : 'Acrylic · Pastel · Charcoal' %></p>
+  </div>
+
+  <%
+    const catLabels = {
+      acrylic:  { he: 'ציורים באקריליק', en: 'Acrylic Paintings' },
+      pastel:   { he: 'ציורים בפסטל',    en: 'Pastel Paintings'  },
+      charcoal: { he: 'ציורים בפחם',     en: 'Charcoal Drawings' },
+      other:    { he: 'אחר',             en: 'Other'             }
+    };
+    const catOrder = ['acrylic', 'pastel', 'charcoal', 'other'];
+  %>
+
+  <% catOrder.forEach(cat => { %>
+  <% const paintings = categories[cat]; %>
+  <% if (paintings && paintings.length > 0) { %>
+
+  <section class="gallery-section" id="<%= cat %>">
+    <h2><%= lang === 'he' ? catLabels[cat].he : catLabels[cat].en %></h2>
+    <div class="gallery-grid">
+      <% paintings.forEach((p, i) => { %>
+      <%
+        const imgSrc = (p.filename && p.filename.startsWith('http'))
+          ? p.filename
+          : '/uploads/' + p.filename;
+        const globalIndex = catOrder.slice(0, catOrder.indexOf(cat)).reduce((sum, c) => sum + (categories[c] ? categories[c].length : 0), 0) + i;
+      %>
+      <div class="painting-card" onclick="openLightbox('<%= cat %>', <%= i %>)" style="cursor:pointer">
+        <img src="<%= imgSrc %>"
+             alt="<%= lang === 'he' ? (p.title_he||'') : (p.title_en||'') %>"
+             loading="lazy">
+        <div class="painting-info">
+          <% const title = lang === 'he' ? p.title_he : p.title_en; %>
+          <% const tech  = lang === 'he' ? p.technique_he : p.technique_en; %>
+          <% if (title) { %><div class="p-title"><%= title %></div><% } %>
+          <% if (tech || p.year) { %>
+          <div class="p-meta">
+            <% if (tech) { %><%= tech %><% } %>
+            <% if (tech && p.year) { %> · <% } %>
+            <% if (p.year) { %><%= p.year %><% } %>
+          </div>
+          <% } %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </section>
+
+  <% } %>
+  <% }) %>
+
+  <div class="page-actions">
+    <a href="/<%= lang %>" class="btn btn-dark"><%= lang === 'he' ? '← חזרה לעמוד הבית' : '← Back to Home' %></a>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="if(event.target===this)closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <button class="lightbox-nav lightbox-prev" onclick="lightboxNav(-1)">‹</button>
+  <img id="lightboxImg" src="" alt="">
+  <button class="lightbox-nav lightbox-next" onclick="lightboxNav(1)">›</button>
+  <div class="lightbox-info" id="lightboxInfo"></div>
+</div>
+
+<div class="legal-footer">
+  © <%= new Date().getFullYear() %> ד"ר יפתח שמש · כל הזכויות שמורות · All Rights Reserved
+</div>
+
+<button class="accessibility-btn" onclick="toggleAccess()">♿</button>
+<div class="accessibility-panel" id="accessPanel">
+  <h4><%= lang === 'he' ? 'נגישות' : 'Accessibility' %></h4>
+  <div class="access-option">
+    <span><%= lang === 'he' ? 'הגדל טקסט' : 'Larger text' %></span>
+    <button onclick="changeFontSize(1)">A+</button>
+    <button onclick="changeFontSize(-1)">A-</button>
+  </div>
+  <div class="access-option">
+    <span><%= lang === 'he' ? 'ניגודיות' : 'Contrast' %></span>
+    <button onclick="toggleContrast()">◑</button>
+  </div>
+</div>
+
+<script>
+  // בנה מערך כולל לכל הקטגוריות לצורך lightbox
+  const allByCategory = <%- JSON.stringify(
+    ['acrylic','pastel','charcoal','other'].reduce((acc, cat) => {
+      acc[cat] = (categories[cat] || []).map(p => ({
+        src: (p.filename && p.filename.startsWith('http')) ? p.filename : '/uploads/' + p.filename,
+        title: lang === 'he' ? (p.title_he||'') : (p.title_en||''),
+        tech:  lang === 'he' ? (p.technique_he||'') : (p.technique_en||''),
+        year:  p.year || ''
+      }));
+      return acc;
+    }, {})
+  ) %>;
+
+  let curCat = '', curIdx = 0;
+
+  function openLightbox(cat, i) {
+    curCat = cat; curIdx = i;
+    render();
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  function lightboxNav(d) {
+    const arr = allByCategory[curCat];
+    curIdx = (curIdx + d + arr.length) % arr.length;
+    render();
+  }
+  function render() {
+    const p = allByCategory[curCat][curIdx];
+    document.getElementById('lightboxImg').src = p.src;
+    document.getElementById('lightboxInfo').textContent = [p.title, p.tech, p.year].filter(Boolean).join(' · ');
+  }
+
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('lightbox').classList.contains('active')) {
+      if (e.key === 'ArrowLeft')  lightboxNav(-1);
+      if (e.key === 'ArrowRight') lightboxNav(1);
+      if (e.key === 'Escape')     closeLightbox();
+    }
+  });
+
+  function toggleAccess() { document.getElementById('accessPanel').classList.toggle('open'); }
+  let fontSize = 100;
+  function changeFontSize(d) { fontSize = Math.min(140, Math.max(80, fontSize + d * 10)); document.body.style.fontSize = fontSize + '%'; }
+  function toggleContrast() { document.body.classList.toggle('high-contrast'); }
+</script>
+</body>
+</html>

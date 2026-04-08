@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>עריכת על אודות</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body dir="rtl">
+<div class="admin-layout">
+  <%- include('_sidebar') %>
+  <div class="admin-main">
+    <h1 class="admin-title">עריכת "על אודות האמן"</h1>
+
+    <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+      <button class="cat-tab active" onclick="switchTab('he', this)">🇮🇱 עברית</button>
+      <button class="cat-tab" onclick="switchTab('en', this)">🇬🇧 English</button>
+    </div>
+
+    <form method="POST" action="/admin/about" id="aboutForm">
+      <!-- Hebrew editor -->
+      <div id="tab-he">
+        <div class="admin-card" style="padding:0; overflow:hidden;">
+          <div class="editor-toolbar">
+            <button type="button" onclick="fmt('bold')" title="מודגש"><b>B</b></button>
+            <button type="button" onclick="fmt('italic')" title="נטוי"><i>I</i></button>
+            <button type="button" onclick="fmt('underline')" title="קו תחתי"><u>U</u></button>
+            <button type="button" onclick="fmt('strikeThrough')" title="קו חוצה"><s>S</s></button>
+            <span style="width:1px; background:var(--border); margin:0 0.3rem;"></span>
+            <select onchange="execFmt('fontName', this.value); this.selectedIndex=0;" style="border:1px solid var(--border); padding:0.2rem; border-radius:3px; font-size:0.8rem;">
+              <option value="">גופן...</option>
+              <option value="'Cormorant Garamond', serif">Cormorant (serif)</option>
+              <option value="'Heebo', sans-serif">Heebo (sans)</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="'Courier New', monospace">Courier</option>
+            </select>
+            <select onchange="execFmt('fontSize', this.value); this.selectedIndex=0;" style="border:1px solid var(--border); padding:0.2rem; border-radius:3px; font-size:0.8rem;">
+              <option value="">גודל...</option>
+              <option value="1">קטן מאוד</option>
+              <option value="2">קטן</option>
+              <option value="3">רגיל</option>
+              <option value="4">בינוני</option>
+              <option value="5">גדול</option>
+              <option value="6">גדול מאוד</option>
+              <option value="7">ענק</option>
+            </select>
+            <span style="width:1px; background:var(--border); margin:0 0.3rem;"></span>
+            <input type="color" onchange="execFmt('foreColor', this.value)" title="צבע טקסט" style="border:none; cursor:pointer; width:28px; height:28px; padding:2px;">
+            <span style="width:1px; background:var(--border); margin:0 0.3rem;"></span>
+            <button type="button" onclick="execFmt('justifyRight')" title="ימין">⫷</button>
+            <button type="button" onclick="execFmt('justifyCenter')" title="מרכז">≡</button>
+            <button type="button" onclick="execFmt('justifyLeft')" title="שמאל">⫸</button>
+            <button type="button" onclick="execFmt('justifyFull')" title="מלא">☰</button>
+            <span style="width:1px; background:var(--border); margin:0 0.3rem;"></span>
+            <button type="button" onclick="execFmt('insertUnorderedList')" title="רשימה">• ≡</button>
+            <button type="button" onclick="execFmt('insertOrderedList')" title="רשימה ממוספרת">1. ≡</button>
+            <span style="width:1px; background:var(--border); margin:0 0.3rem;"></span>
+            <button type="button" onclick="insertHeading()" title="כותרת">H</button>
+            <button type="button" onclick="execFmt('removeFormat')" title="נקה עיצוב">✕</button>
+          </div>
+          <div class="editor-area" id="editorHe" contenteditable="true" dir="rtl"
+               style="min-height:300px; max-height:600px; overflow-y:auto;"><%- about.content_he %></div>
+        </div>
+      </div>
+
+      <!-- English editor -->
+      <div id="tab-en" style="display:none;">
+        <div class="admin-card" style="padding:0; overflow:hidden;">
+          <div class="editor-toolbar">
+            <button type="button" onclick="fmtEn('bold')"><b>B</b></button>
+            <button type="button" onclick="fmtEn('italic')"><i>I</i></button>
+            <button type="button" onclick="fmtEn('underline')"><u>U</u></button>
+            <button type="button" onclick="fmtEn('strikeThrough')"><s>S</s></button>
+            <span style="width:1px; background:var(--border); margin:0 0.3rem;"></span>
+            <select onchange="execFmtEn('fontName', this.value); this.selectedIndex=0;" style="border:1px solid var(--border); padding:0.2rem; border-radius:3px; font-size:0.8rem;">
+              <option value="">Font...</option>
+              <option value="'Cormorant Garamond', serif">Cormorant (serif)</option>
+              <option value="'Heebo', sans-serif">Heebo (sans)</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="Arial, sans-serif">Arial</option>
+            </select>
+            <select onchange="execFmtEn('fontSize', this.value); this.selectedIndex=0;" style="border:1px solid var(--border); padding:0.2rem; border-radius:3px; font-size:0.8rem;">
+              <option value="">Size...</option>
+              <option value="2">Small</option>
+              <option value="3">Normal</option>
+              <option value="4">Medium</option>
+              <option value="5">Large</option>
+              <option value="6">X-Large</option>
+            </select>
+            <input type="color" onchange="execFmtEn('foreColor', this.value)" style="border:none; cursor:pointer; width:28px; height:28px; padding:2px;">
+            <span style="width:1px; background:var(--border); margin:0 0.3rem;"></span>
+            <button type="button" onclick="execFmtEn('justifyLeft')">⫸</button>
+            <button type="button" onclick="execFmtEn('justifyCenter')">≡</button>
+            <button type="button" onclick="execFmtEn('justifyRight')">⫷</button>
+            <button type="button" onclick="execFmtEn('insertUnorderedList')">• ≡</button>
+            <button type="button" onclick="execFmtEn('removeFormat')">✕</button>
+          </div>
+          <div class="editor-area" id="editorEn" contenteditable="true" dir="ltr"
+               style="min-height:300px; max-height:600px; overflow-y:auto;"><%- about.content_en %></div>
+        </div>
+      </div>
+
+      <input type="hidden" name="content_he" id="contentHe">
+      <input type="hidden" name="content_en" id="contentEn">
+
+      <button type="submit" class="btn btn-gold" style="margin-top:1rem;" onclick="syncContent()">
+        💾 שמור
+      </button>
+      <a href="/he/about" target="_blank" class="btn btn-dark" style="margin-right:1rem;">👁️ תצוגה מקדימה</a>
+    </form>
+  </div>
+</div>
+
+<script>
+  function switchTab(lang, el) {
+    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('tab-he').style.display = lang === 'he' ? '' : 'none';
+    document.getElementById('tab-en').style.display = lang === 'en' ? '' : 'none';
+  }
+
+  function fmt(cmd) {
+    document.getElementById('editorHe').focus();
+    document.execCommand(cmd, false, null);
+  }
+  function execFmt(cmd, val) {
+    document.getElementById('editorHe').focus();
+    document.execCommand(cmd, false, val);
+  }
+  function fmtEn(cmd) {
+    document.getElementById('editorEn').focus();
+    document.execCommand(cmd, false, null);
+  }
+  function execFmtEn(cmd, val) {
+    document.getElementById('editorEn').focus();
+    document.execCommand(cmd, false, val);
+  }
+  function insertHeading() {
+    document.getElementById('editorHe').focus();
+    document.execCommand('formatBlock', false, 'h2');
+  }
+  function syncContent() {
+    document.getElementById('contentHe').value = document.getElementById('editorHe').innerHTML;
+    document.getElementById('contentEn').value = document.getElementById('editorEn').innerHTML;
+  }
+</script>
+</body>
+</html>

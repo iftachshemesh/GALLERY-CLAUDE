@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= lang === 'he' ? 'תערוכות וכתבות' : 'Exhibitions & Press' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .exhibitions-text {
+      max-width: 900px;
+      margin: 2.5rem auto 0;
+      padding: 0 2rem;
+      line-height: 1.9;
+      font-size: 1rem;
+      color: var(--charcoal);
+    }
+    .exhibitions-text h2 {
+      font-size: 1.5rem;
+      color: var(--charcoal);
+      margin: 1.5rem 0 0.5rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 2px solid var(--gold);
+      display: inline-block;
+    }
+    .exhibitions-text ul {
+      padding-right: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .exhibitions-text li { margin-bottom: 0.4rem; }
+    .exhibitions-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2.5rem auto;
+      max-width: 900px;
+    }
+  </style>
+</head>
+<body dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+
+<nav class="site-nav">
+  <a href="/<%= lang %>" class="nav-brand"><%= lang === 'he' ? 'ד"ר יפתח שמש' : 'Dr. Yiftach Shemesh' %></a>
+  <div class="nav-links">
+    <a href="/<%= lang %>/gallery"><%= lang === 'he' ? 'גלריה' : 'Gallery' %></a>
+    <a href="/<%= lang %>/exhibitions" class="active"><%= lang === 'he' ? 'תערוכות' : 'Exhibitions' %></a>
+    <a href="/<%= lang %>/about"><%= lang === 'he' ? 'על אודות' : 'About' %></a>
+    <a href="/<%= lang %>/contact"><%= lang === 'he' ? 'צור קשר' : 'Contact' %></a>
+    <a href="/<%= lang === 'he' ? 'en' : 'he' %>/exhibitions" class="lang-toggle"><%= lang === 'he' ? 'EN' : 'עב' %></a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <h1><%= lang === 'he' ? 'תערוכות וכתבות' : 'Exhibitions & Press' %></h1>
+  </div>
+
+  <!-- טקסט תערוכות -->
+  <% const exText = lang === 'he' ? (locals.exContent && locals.exContent.content_he) : (locals.exContent && locals.exContent.content_en); %>
+  <% if (exText) { %>
+  <div class="exhibitions-text">
+    <%- exText %>
+  </div>
+  <hr class="exhibitions-divider">
+  <% } %>
+
+  <!-- גריד ציורים -->
+  <% if (paintings && paintings.length > 0) { %>
+  <div class="exhibitions-grid">
+    <% paintings.forEach((p, i) => { %>
+    <%
+      const imgSrc = (p.filename && p.filename.startsWith('http'))
+        ? p.filename
+        : '/uploads/' + p.filename;
+    %>
+    <div class="painting-card" onclick="openLightbox(<%= i %>)" style="cursor:pointer">
+      <img src="<%= imgSrc %>"
+           alt="<%= lang === 'he' ? (p.title_he||'') : (p.title_en||'') %>"
+           loading="lazy">
+      <div class="painting-info">
+        <% const title = lang === 'he' ? p.title_he : p.title_en; %>
+        <% const tech  = lang === 'he' ? p.technique_he : p.technique_en; %>
+        <% if (title) { %><div class="p-title"><%= title %></div><% } %>
+        <% if (tech || p.year) { %>
+        <div class="p-meta">
+          <% if (tech) { %><%= tech %><% } %>
+          <% if (p.year) { %> · <%= p.year %><% } %>
+        </div>
+        <% } %>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } else { %>
+  <div style="text-align:center; padding:4rem; color:var(--muted);">
+    <%= lang === 'he' ? 'תמונות יתווספו בקרוב' : 'Images coming soon' %>
+  </div>
+  <% } %>
+
+  <div class="page-actions">
+    <a href="/<%= lang %>" class="btn btn-dark"><%= lang === 'he' ? '← חזרה לעמוד הבית' : '← Back to Home' %></a>
+    <button class="btn btn-dark btn-sm" onclick="toggleAccess()">♿</button>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="if(event.target===this)closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <button class="lightbox-nav lightbox-prev" onclick="lightboxNav(-1)">‹</button>
+  <img id="lightboxImg" src="" alt="">
+  <button class="lightbox-nav lightbox-next" onclick="lightboxNav(1)">›</button>
+  <div class="lightbox-info" id="lightboxInfo"></div>
+</div>
+
+<div class="legal-footer">
+  © <%= new Date().getFullYear() %> ד"ר יפתח שמש · כל הזכויות שמורות
+</div>
+
+<button class="accessibility-btn" onclick="toggleAccess()">♿</button>
+<div class="accessibility-panel" id="accessPanel">
+  <h4>נגישות</h4>
+  <div class="access-option"><span>טקסט</span><button onclick="changeFontSize(1)">A+</button><button onclick="changeFontSize(-1)">A-</button></div>
+  <div class="access-option"><span>ניגודיות</span><button onclick="toggleContrast()">◑</button></div>
+</div>
+
+<script>
+  const paintings = <%- JSON.stringify((paintings||[]).map(p => ({
+    filename: (p.filename && p.filename.startsWith('http')) ? p.filename : '/uploads/' + p.filename,
+    title: lang === 'he' ? (p.title_he||'') : (p.title_en||''),
+    tech:  lang === 'he' ? (p.technique_he||'') : (p.technique_en||''),
+    year:  p.year||''
+  }))) %>;
+  const lang = '<%= lang %>';
+  let cur = 0;
+  function openLightbox(i) { cur=i; render(); document.getElementById('lightbox').classList.add('active'); document.body.style.overflow='hidden'; }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); document.body.style.overflow=''; }
+  function lightboxNav(d) { cur=(cur+d+paintings.length)%paintings.length; render(); }
+  function render() {
+    const p = paintings[cur];
+    document.getElementById('lightboxImg').src = p.filename;
+    document.getElementById('lightboxInfo').textContent = [p.title, p.tech, p.year].filter(Boolean).join(' · ');
+  }
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('lightbox').classList.contains('active')) {
+      if (e.key==='ArrowLeft')  lightboxNav(-1);
+      if (e.key==='ArrowRight') lightboxNav(1);
+      if (e.key==='Escape')     closeLightbox();
+    }
+  });
+  function toggleAccess(){ document.getElementById('accessPanel').classList.toggle('open'); }
+  let fontSize = 100;
+  function changeFontSize(d){ fontSize=Math.min(140,Math.max(80,fontSize+d*10)); document.body.style.fontSize=fontSize+'%'; }
+  function toggleContrast(){ document.body.classList.toggle('high-contrast'); }
+</script>
+</body>
+</html>
