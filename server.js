@@ -237,4 +237,5 @@ function getSuggestions(cb) {
   });
 }
 
+app.get('/debug', (req,res) => res.json({dir: __dirname, files: require('fs').readdirSync(__dirname + '/public')}));
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));
