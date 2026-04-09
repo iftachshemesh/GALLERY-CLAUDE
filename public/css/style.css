@@ -68,7 +68,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 }
 .hero-bg {
   position: absolute; inset: 0;
-  background: url('/hero.jpg') center/cover no-repeat;
+  background: url('https://i.ibb.co/ZkGL0Rh/hero.png') center/cover no-repeat;
   filter: brightness(1.4) contrast(1.1);
   transform: scale(1.02);
   transition: transform 8s ease;
