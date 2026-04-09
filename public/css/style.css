@@ -68,7 +68,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 }
 .hero-bg {
   position: absolute; inset: 0;
-  background: url('https://i.ibb.co/ZkGL0Rh/hero.png') center/cover no-repeat;
+  background: url('https://res.cloudinary.com/dd6wpwsae/image/upload/hero_zijzst.png') center/cover no-repeat;
   filter: brightness(1.4) contrast(1.1);
   transform: scale(1.02);
   transition: transform 8s ease;
@@ -452,3 +452,4 @@ body[dir="ltr"] .admin-main { margin-left: 220px; margin-right: 0; }
   background: #d4edda; border-radius: 6px;
   margin: 2rem 0; color: #155724;
 }
+
