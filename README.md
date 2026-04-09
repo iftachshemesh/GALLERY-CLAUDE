@@ -66,3 +66,4 @@ node server.js
 אין להעתיק, להפיץ, לשכפל או לעשות כל שימוש מסחרי בתמונות ללא אישור בכתב.
 
 © Dr. Yiftach Shemesh — All Rights Reserved
+# hero image added
