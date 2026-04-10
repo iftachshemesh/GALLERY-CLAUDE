@@ -53,6 +53,16 @@
 <script>
   const heroBg = document.getElementById('heroBg');
   heroBg.style.backgroundImage = "url('https://res.cloudinary.com/dd6wpwsae/image/upload/hero_zijzst.png')";
+  heroBg.style.backgroundSize = 'contain';
+  heroBg.style.backgroundRepeat = 'no-repeat';
+  heroBg.style.backgroundPosition = 'center';
+  heroBg.style.backgroundColor = '#0a0806';
+  heroBg.style.backgroundSize = 'contain';
+  heroBg.style.backgroundRepeat = 'no-repeat';
+  heroBg.style.backgroundPosition = 'center';
+  heroBg.style.backgroundSize = 'contain';
+  heroBg.style.backgroundRepeat = 'no-repeat';
+  heroBg.style.backgroundPosition = 'center';
   function toggleAccess() { document.getElementById('accessPanel').classList.toggle('open'); }
   let fontSize = 100;
   function changeFontSize(dir) { fontSize = Math.min(140, Math.max(80, fontSize + dir * 10)); document.body.style.fontSize = fontSize + '%'; }
@@ -60,3 +70,6 @@
 </script>
 </body>
 </html>
+
+
+
