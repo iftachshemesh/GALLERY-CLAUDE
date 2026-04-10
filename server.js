@@ -8,19 +8,26 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Storage
-const cloudinary = require('cloudinary').v2;
-// Cloudinary config from URL
-if (process.env.CLOUDINARY_URL) {
-  cloudinary.config({ cloudinary_url: process.env.CLOUDINARY_URL });
-} else {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-  });
-}
-const storage = multer.memoryStorage();
-const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, unique + path.extname(file.originalname));
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = /image\/(jpeg|png|gif|webp|bmp|tiff)|text\/html/;
+    const extAllowed = /\.(jpe?g|png|gif|webp|bmp|tiff|html?|htm)$/i;
+    if (allowed.test(file.mimetype) || extAllowed.test(file.originalname)) {
+      cb(null, true);
+    } else {
+      cb(null, false); // דחה בשקט — לא זורק שגיאה
+    }
+  }
+});
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -143,25 +150,15 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), (req, res) => {
   if (technique_en) db.run('INSERT OR IGNORE INTO autocomplete_techniques (value) VALUES (?)', [technique_en]);
   if (size) db.run('INSERT OR IGNORE INTO autocomplete_sizes (value) VALUES (?)', [size]);
 
-  if (files.length === 0) { console.log('NO FILES'); return res.redirect('/admin/upload'); }
-  console.log('FILES:', files.length, files.map(f => f.originalname));
+  if (files.length === 0) return res.redirect('/admin/upload');
 
   let done = 0;
   files.forEach((file, i) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: 'yiftach-gallery', public_id: Date.now() + '-' + i },
-      (error, result) => {
-        if (error) { console.log('CLOUDINARY ERROR:', error); done++; if (done === files.length) res.redirect('/admin/manage'); return; }
-        console.log('CLOUDINARY SUCCESS:', result.secure_url);
-        db.run(
-          'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES (?,?,?,?,?,?,?,?,?)',
-          [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', result.secure_url, i],
-          () => { done++; if (done === files.length) res.redirect('/admin/manage'); }
-        );
-      }
+    db.run(
+      'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES (?,?,?,?,?,?,?,?,?)',
+      [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', file.filename, i],
+      () => { done++; if (done === files.length) res.redirect('/admin/manage'); }
     );
-    console.log('BUFFER SIZE:', file.buffer ? file.buffer.length : 'NO BUFFER');
-    uploadStream.end(file.buffer);
   });
 });
 
@@ -242,9 +239,3 @@ function getSuggestions(cb) {
 
 app.get('/debug', (req,res) => res.json({dir: __dirname, files: require('fs').readdirSync(__dirname + '/public')}));
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));
-
-
-
-
-
-
