@@ -155,6 +155,7 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), (req, res) => {
         );
       }
     );
+    console.log('BUFFER SIZE:', file.buffer ? file.buffer.length : 'NO BUFFER');
     uploadStream.end(file.buffer);
   });
 });
@@ -236,6 +237,7 @@ function getSuggestions(cb) {
 
 app.get('/debug', (req,res) => res.json({dir: __dirname, files: require('fs').readdirSync(__dirname + '/public')}));
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));
+
 
 
 
