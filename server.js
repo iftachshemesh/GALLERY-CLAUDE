@@ -138,7 +138,8 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), (req, res) => {
   if (technique_en) db.run('INSERT OR IGNORE INTO autocomplete_techniques (value) VALUES (?)', [technique_en]);
   if (size) db.run('INSERT OR IGNORE INTO autocomplete_sizes (value) VALUES (?)', [size]);
 
-  if (files.length === 0) return res.redirect('/admin/upload');
+  if (files.length === 0) { console.log('NO FILES'); return res.redirect('/admin/upload'); }
+  console.log('FILES:', files.length, files.map(f => f.originalname));
 
   let done = 0;
   files.forEach((file, i) => {
@@ -234,5 +235,6 @@ function getSuggestions(cb) {
 
 app.get('/debug', (req,res) => res.json({dir: __dirname, files: require('fs').readdirSync(__dirname + '/public')}));
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));
+
 
 
