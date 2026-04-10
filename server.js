@@ -146,7 +146,8 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), (req, res) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder: 'yiftach-gallery', public_id: Date.now() + '-' + i },
       (error, result) => {
-        if (error) { done++; if (done === files.length) res.redirect('/admin/manage'); return; }
+        if (error) { console.log('CLOUDINARY ERROR:', error); done++; if (done === files.length) res.redirect('/admin/manage'); return; }
+        console.log('CLOUDINARY SUCCESS:', result.secure_url);
         db.run(
           'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES (?,?,?,?,?,?,?,?,?)',
           [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', result.secure_url, i],
@@ -235,6 +236,7 @@ function getSuggestions(cb) {
 
 app.get('/debug', (req,res) => res.json({dir: __dirname, files: require('fs').readdirSync(__dirname + '/public')}));
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));
+
 
 
 
