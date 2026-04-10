@@ -8,26 +8,14 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  }
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
-const upload = multer({
-  storage,
-  limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowed = /image\/(jpeg|png|gif|webp|bmp|tiff)|text\/html/;
-    const extAllowed = /\.(jpe?g|png|gif|webp|bmp|tiff|html?|htm)$/i;
-    if (allowed.test(file.mimetype) || extAllowed.test(file.originalname)) {
-      cb(null, true);
-    } else {
-      cb(null, false); // דחה בשקט — לא זורק שגיאה
-    }
-  }
-});
+const storage = multer.memoryStorage();
+const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -154,11 +142,18 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), (req, res) => {
 
   let done = 0;
   files.forEach((file, i) => {
-    db.run(
-      'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES (?,?,?,?,?,?,?,?,?)',
-      [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', file.filename, i],
-      () => { done++; if (done === files.length) res.redirect('/admin/manage'); }
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: 'yiftach-gallery', public_id: Date.now() + '-' + i },
+      (error, result) => {
+        if (error) { done++; if (done === files.length) res.redirect('/admin/manage'); return; }
+        db.run(
+          'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES (?,?,?,?,?,?,?,?,?)',
+          [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', result.secure_url, i],
+          () => { done++; if (done === files.length) res.redirect('/admin/manage'); }
+        );
+      }
     );
+    uploadStream.end(file.buffer);
   });
 });
 
@@ -239,3 +234,5 @@ function getSuggestions(cb) {
 
 app.get('/debug', (req,res) => res.json({dir: __dirname, files: require('fs').readdirSync(__dirname + '/public')}));
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));
+
+
