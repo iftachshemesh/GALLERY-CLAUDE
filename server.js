@@ -9,11 +9,16 @@ const PORT = process.env.PORT || 10000;
 
 // Storage
 const cloudinary = require('cloudinary').v2;
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// Cloudinary config from URL
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config({ cloudinary_url: process.env.CLOUDINARY_URL });
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
 const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
 
@@ -237,6 +242,7 @@ function getSuggestions(cb) {
 
 app.get('/debug', (req,res) => res.json({dir: __dirname, files: require('fs').readdirSync(__dirname + '/public')}));
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));
+
 
 
 
