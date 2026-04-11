@@ -12,7 +12,6 @@
     .site-nav { background: rgba(10,8,6,0.8); border-bottom: 1px solid var(--border); }
     .hero-bg { display: none !important; }
     .hero-overlay { display: none !important; }
-
     .hero {
       height: 100vh;
       background: #0a0806;
@@ -21,7 +20,6 @@
       align-items: center;
       justify-content: center;
     }
-
     .hero-inner {
       position: relative;
       width: 100%;
@@ -30,8 +28,6 @@
       margin: 0 auto;
       padding: 0 2rem;
     }
-
-    /* NAV — physical LEFT */
     .hero-nav-left {
       position: absolute;
       left: 2rem;
@@ -64,8 +60,6 @@
       direction: ltr;
     }
     .hero-nav-left .lang-btn:hover { background: var(--gold); color: #0a0806; }
-
-    /* PAINTING — physical CENTER, bigger */
     .hero-painting-wrap {
       position: absolute;
       left: 50%;
@@ -77,10 +71,7 @@
       max-width: 50vw;
       object-fit: contain;
       display: block;
-      mix-blend-mode: normal;
     }
-
-    /* TITLE — physical RIGHT */
     .hero-content {
       position: absolute;
       right: 2rem;
@@ -104,7 +95,6 @@
       font-family: 'Cormorant Garamond', serif;
       font-style: italic;
     }
-
     @media (max-width: 800px) {
       body { overflow: auto; }
       .hero { height: auto; padding: 90px 1rem 2rem; }
@@ -134,7 +124,7 @@
 
     <div class="hero-painting-wrap">
       <img class="hero-painting"
-           src="https://res.cloudinary.com/dd6wpwsae/image/upload/hero_zijzst.png"
+           src="https://res.cloudinary.com/dd6wpwsae/image/upload/e_background_removal,b_rgb:0a0806/hero_zijzst.png"
            alt="painting">
     </div>
 
