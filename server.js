@@ -19,7 +19,7 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => ({
     folder: 'iftach-gallery',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff'],
+    upload_preset: 'stvk6me5',
     public_id: Date.now() + '-' + Math.round(Math.random() * 1e9),
   }),
 });
