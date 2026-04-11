@@ -9,7 +9,11 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // ─── Cloudinary config ───────────────────────────────────────────────────────
-cloudinary.config(process.env.CLOUDINARY_URL);
+cloudinary.config({
+  cloud_name: "dd6wpwsae",
+  api_key: "131673227297333",
+  api_secret: "-9ngvPWZ7nRcLI7qllA8FlPfw0"
+});
 
 const storage = new CloudinaryStorage({
   cloudinary,
