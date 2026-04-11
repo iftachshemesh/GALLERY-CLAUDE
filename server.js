@@ -9,26 +9,25 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ─── CLOUDINARY CONFIG ───────────────────────────────────────────────────────
+// ─── Cloudinary config ───────────────────────────────────────────────────────
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Storage — שומר ישירות ל-Cloudinary
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => ({
-    folder: 'yiftach-gallery',
+    folder: 'iftach-gallery',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff'],
-    public_id: Date.now() + '-' + Math.round(Math.random() * 1e9)
-  })
+    public_id: Date.now() + '-' + Math.round(Math.random() * 1e9),
+  }),
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 20 * 1024 * 1024 }
+  limits: { fileSize: 20 * 1024 * 1024 },
 });
 
 app.set('view engine', 'ejs');
@@ -70,7 +69,7 @@ app.get(['/:lang(he|en)/gallery', '/gallery'], (req, res) => {
 app.get(['/:lang(he|en)/exhibitions', '/exhibitions'], (req, res) => {
   const lang = req.params.lang || 'he';
   db.all("SELECT * FROM paintings WHERE category = 'exhibitions' ORDER BY sort_order ASC, id ASC", [], (err, rows) => {
-    res.render('exhibitions', { lang, paintings: rows || [] });
+    res.render('exhibitions', { lang, paintings: rows || [], exContent: null });
   });
 });
 
@@ -83,30 +82,20 @@ app.get(['/:lang(he|en)/about', '/about'], (req, res) => {
 
 app.get(['/:lang(he|en)/contact', '/contact'], (req, res) => {
   const lang = req.params.lang || 'he';
-  res.render('contact', { lang, sent: false, error: false });
+  db.all('SELECT * FROM messages ORDER BY created_at DESC', [], (err, messages) => {
+    res.render('contact', { lang, sent: false, error: false, messages: messages || [] });
+  });
 });
 
-app.post(['/:lang(he|en)/contact', '/contact'], async (req, res) => {
+app.post(['/:lang(he|en)/contact', '/contact'], (req, res) => {
   const lang = req.params.lang || 'he';
   const { name, email, message } = req.body;
-  try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.MAIL_USER || 'doc.ift@gmail.com',
-        pass: process.env.MAIL_PASS || ''
-      }
+
+  db.run('INSERT INTO messages (name, email, message) VALUES (?, ?, ?)', [name, email, message], () => {
+    db.all('SELECT * FROM messages ORDER BY created_at DESC', [], (err, messages) => {
+      res.render('contact', { lang, sent: true, error: false, messages: messages || [] });
     });
-    await transporter.sendMail({
-      from: email,
-      to: 'doc.ift@gmail.com',
-      subject: `Gallery Contact: ${name}`,
-      text: `From: ${name} <${email}>\n\n${message}`
-    });
-    res.render('contact', { lang, sent: true, error: false });
-  } catch (e) {
-    res.render('contact', { lang, sent: false, error: true });
-  }
+  });
 });
 
 // ─── ADMIN ROUTES ────────────────────────────────────────────────────────────
@@ -134,6 +123,7 @@ app.get('/admin', adminAuth, (req, res) => {
   res.render('admin/dashboard', { lang: 'he' });
 });
 
+// Upload paintings
 app.get('/admin/upload', adminAuth, (req, res) => {
   getSuggestions(suggestions => {
     res.render('admin/upload', { lang: 'he', suggestions, saved: req.query.saved === '1' });
@@ -154,16 +144,15 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), (req, res) => {
 
   let done = 0;
   files.forEach((file, i) => {
-    // file.path = ה-URL המלא של Cloudinary
-    const filename = file.path;
     db.run(
       'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES (?,?,?,?,?,?,?,?,?)',
-      [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', filename, i],
+      [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', file.path, i],
       () => { done++; if (done === files.length) res.redirect('/admin/manage'); }
     );
   });
 });
 
+// Manage paintings — always reload fresh from DB
 app.get('/admin/manage', adminAuth, (req, res) => {
   db.all('SELECT * FROM paintings ORDER BY category, sort_order ASC, id ASC', [], (err, rows) => {
     getSuggestions(suggestions => {
@@ -172,6 +161,7 @@ app.get('/admin/manage', adminAuth, (req, res) => {
   });
 });
 
+// Edit painting
 app.post('/admin/edit/:id', adminAuth, (req, res) => {
   const { title_he, title_en, technique_he, technique_en, year, size, category } = req.body;
   if (title_he) db.run('INSERT OR IGNORE INTO autocomplete_titles (value) VALUES (?)', [title_he]);
@@ -183,22 +173,14 @@ app.post('/admin/edit/:id', adminAuth, (req, res) => {
   db.run(
     'UPDATE paintings SET title_he=?, title_en=?, technique_he=?, technique_en=?, year=?, size=?, category=? WHERE id=?',
     [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', req.params.id],
-    () => res.redirect('/admin/manage?updated=' + Date.now())
+    () => {
+      res.redirect('/admin/manage?updated=' + Date.now());
+    }
   );
 });
 
 app.post('/admin/delete/:id', adminAuth, (req, res) => {
-  // מחק גם מ-Cloudinary
-  db.get('SELECT filename FROM paintings WHERE id = ?', [req.params.id], (err, row) => {
-    if (row && row.filename && row.filename.startsWith('http')) {
-      // חלץ את ה-public_id מה-URL
-      const parts = row.filename.split('/');
-      const file = parts[parts.length - 1].split('.')[0];
-      const folder = parts[parts.length - 2];
-      cloudinary.uploader.destroy(folder + '/' + file).catch(() => {});
-    }
-    db.run('DELETE FROM paintings WHERE id = ?', [req.params.id], () => res.redirect('/admin/manage'));
-  });
+  db.run('DELETE FROM paintings WHERE id = ?', [req.params.id], () => res.redirect('/admin/manage'));
 });
 
 app.post('/admin/reorder', adminAuth, (req, res) => {
@@ -213,6 +195,7 @@ app.post('/admin/reorder', adminAuth, (req, res) => {
   });
 });
 
+// About editor
 app.get('/admin/about', adminAuth, (req, res) => {
   db.get('SELECT * FROM about WHERE id = 1', [], (err, row) => {
     res.render('admin/about', { lang: 'he', about: row || { content_he: '', content_en: '' } });
@@ -227,7 +210,7 @@ app.post('/admin/about', adminAuth, (req, res) => {
   );
 });
 
-// ─── HELPERS ────────────────────────────────────────────────────────────────
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 function getSuggestions(cb) {
   db.all('SELECT value FROM autocomplete_titles', [], (err, r1) => {
@@ -243,4 +226,5 @@ function getSuggestions(cb) {
   });
 }
 
+app.get('/debug', (req, res) => res.json({ dir: __dirname, files: require('fs').readdirSync(__dirname + '/public') }));
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));
