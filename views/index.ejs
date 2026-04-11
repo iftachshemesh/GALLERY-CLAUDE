@@ -6,11 +6,106 @@
   <title><%= lang === 'he' ? "גלריית הציורים של ד\"ר יפתח שמש" : "Dr. Iftach Shemesh Art Gallery" %></title>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-    body { overflow: hidden; }
+    body { overflow: hidden; background: #0a0806; }
     @media (max-width: 600px) { body { overflow: auto; } }
+
+    /* ── Hero layout ── */
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      position: relative;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0;
+      background-color: #0a0806;
+    }
+
+    .hero-overlay { display: none; }
+
+    /* Three-column layout: nav | painting | title */
+    .hero-layout {
+      position: relative; z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3rem;
+      width: 100%;
+      max-width: 1200px;
+      padding: 0 2rem;
+    }
+
+    /* Left vertical nav */
+    .hero-nav-left {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      align-items: flex-end;
+      min-width: 160px;
+    }
+    .hero-nav-left a {
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+      font-family: 'Heebo', sans-serif;
+    }
+    .hero-nav-left a:hover { color: var(--gold); }
+    .hero-nav-left .lang-toggle {
+      padding: 0.25rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--gold);
+      font-size: 0.8rem;
+    }
+    .hero-nav-left .lang-toggle:hover {
+      background: var(--gold); color: var(--dark);
+    }
+
+    /* Center painting */
+    .hero-painting {
+      flex-shrink: 0;
+      max-height: 80vh;
+      max-width: 45vw;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Right title content */
+    .hero-content {
+      position: static;
+      padding: 0;
+      max-width: 350px;
+      min-width: 200px;
+    }
+
+    /* Top bar — just brand + lang on mobile */
+    .site-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.75rem 2rem;
+      background: rgba(10,8,6,0.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .site-nav .nav-links { display: none; } /* hide top nav on homepage */
+
+    @media (max-width: 800px) {
+      .hero-layout { flex-direction: column; gap: 1.5rem; padding-top: 80px; }
+      .hero-nav-left { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; }
+      .hero-painting { max-width: 85vw; max-height: 45vh; }
+      .hero-content { text-align: center; }
+      .site-nav .nav-links { display: flex; }
+      .hero-nav-left { display: none; }
+    }
   </style>
 </head>
 <body dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
+
 <nav class="site-nav">
   <a href="/<%= lang %>" class="nav-brand"><%= lang === 'he' ? 'ד"ר יפתח שמש' : 'Dr. Iftach Shemesh' %></a>
   <div class="nav-links">
@@ -21,22 +116,45 @@
     <a href="/<%= lang === 'he' ? 'en' : 'he' %>" class="lang-toggle"><%= lang === 'he' ? 'EN' : 'עב' %></a>
   </div>
 </nav>
+
 <div class="hero">
   <div class="hero-bg" id="heroBg"></div>
   <div class="hero-overlay"></div>
-  <div class="hero-content">
-    <h1 class="hero-title"><%= lang === 'he' ? 'גלריית הציורים של ד"ר יפתח שמש' : 'Art Gallery of Dr. Iftach Shemesh' %></h1>
-    <p class="hero-subtitle"><%= lang === 'he' ? 'אקריליק · פסטל · פחם' : 'Acrylic · Pastel · Charcoal' %></p>
-    <div class="hero-buttons">
-      <a href="/<%= lang %>/gallery" class="btn btn-gold"><%= lang === 'he' ? 'לגלריה' : 'View Gallery' %></a>
-      <a href="/<%= lang %>/about" class="btn btn-outline"><%= lang === 'he' ? 'על האמן' : 'About the Artist' %></a>
-      <a href="/<%= lang %>/contact" class="btn btn-outline"><%= lang === 'he' ? 'צור קשר' : 'Contact' %></a>
+
+  <div class="hero-layout">
+
+    <!-- Left: vertical nav -->
+    <div class="hero-nav-left">
+      <a href="/<%= lang %>/gallery"><%= lang === 'he' ? 'גלריה' : 'Gallery' %></a>
+      <a href="/<%= lang %>/exhibitions"><%= lang === 'he' ? 'תערוכות וכתבות' : 'Exhibitions' %></a>
+      <a href="/<%= lang %>/about"><%= lang === 'he' ? 'על אודות' : 'About' %></a>
+      <a href="/<%= lang %>/contact"><%= lang === 'he' ? 'צור קשר' : 'Contact' %></a>
+      <a href="/<%= lang === 'he' ? 'en' : 'he' %>" class="lang-toggle"><%= lang === 'he' ? 'EN' : 'עב' %></a>
     </div>
+
+    <!-- Center: painting -->
+    <img class="hero-painting" id="heroPainting"
+         src="https://res.cloudinary.com/dd6wpwsae/image/upload/hero_zijzst.png"
+         alt="<%= lang === 'he' ? 'ציור של ד\"ר יפתח שמש' : 'Painting by Dr. Iftach Shemesh' %>">
+
+    <!-- Right: title & buttons -->
+    <div class="hero-content">
+      <h1 class="hero-title"><%= lang === 'he' ? 'גלריית הציורים של ד"ר יפתח שמש' : 'Art Gallery of Dr. Iftach Shemesh' %></h1>
+      <p class="hero-subtitle"><%= lang === 'he' ? 'אקריליק · פסטל · פחם' : 'Acrylic · Pastel · Charcoal' %></p>
+      <div class="hero-buttons">
+        <a href="/<%= lang %>/gallery" class="btn btn-gold"><%= lang === 'he' ? 'לגלריה' : 'View Gallery' %></a>
+        <a href="/<%= lang %>/about" class="btn btn-outline"><%= lang === 'he' ? 'על האמן' : 'About the Artist' %></a>
+        <a href="/<%= lang %>/contact" class="btn btn-outline"><%= lang === 'he' ? 'צור קשר' : 'Contact' %></a>
+      </div>
+    </div>
+
   </div>
 </div>
+
 <div class="legal-footer" style="position:fixed;bottom:0;left:0;right:0;z-index:50;">
   © <%= new Date().getFullYear() %> ד"ר יפתח שמש · כל הזכויות שמורות · All Rights Reserved
 </div>
+
 <button class="accessibility-btn" onclick="toggleAccess()" aria-label="נגישות">♿</button>
 <div class="accessibility-panel" id="accessPanel">
   <h4><%= lang === 'he' ? 'נגישות' : 'Accessibility' %></h4>
@@ -50,23 +168,10 @@
     <button onclick="toggleContrast()">◑</button>
   </div>
 </div>
+
 <script>
   const heroBg = document.getElementById('heroBg');
-  heroBg.style.backgroundImage = "url('https://res.cloudinary.com/dd6wpwsae/image/upload/hero_zijzst.png')";
-  heroBg.style.backgroundSize = 'contain';
-  heroBg.style.backgroundRepeat = 'no-repeat';
-  heroBg.style.backgroundPosition = 'center';
   heroBg.style.backgroundColor = '#0a0806';
-  heroBg.style.backgroundSize = 'contain';
-  heroBg.style.backgroundRepeat = 'no-repeat';
-  heroBg.style.backgroundPosition = 'center';
-  heroBg.style.backgroundColor = '#0a0806';
-  heroBg.style.backgroundSize = 'contain';
-  heroBg.style.backgroundRepeat = 'no-repeat';
-  heroBg.style.backgroundPosition = 'center';
-  heroBg.style.backgroundSize = 'contain';
-  heroBg.style.backgroundRepeat = 'no-repeat';
-  heroBg.style.backgroundPosition = 'center';
   function toggleAccess() { document.getElementById('accessPanel').classList.toggle('open'); }
   let fontSize = 100;
   function changeFontSize(dir) { fontSize = Math.min(140, Math.max(80, fontSize + dir * 10)); document.body.style.fontSize = fontSize + '%'; }
@@ -74,8 +179,3 @@
 </script>
 </body>
 </html>
-
-
-
-
-
