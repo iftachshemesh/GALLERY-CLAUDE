@@ -225,5 +225,19 @@ function getSuggestions(cb) {
   });
 }
 
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Express error:', err);
+  res.status(500).send('Internal Server Error: ' + err.message);
+});
+
 app.get('/debug', (req, res) => res.json({ dir: __dirname, files: require('fs').readdirSync(__dirname + '/public') }));
+
+app.get('/debug-db', (req, res) => {
+  db.all('SELECT * FROM paintings LIMIT 5', [], (err, rows) => {
+    if (err) return res.json({ error: err.message });
+    res.json({ ok: true, count: rows.length, rows });
+  });
+});
+
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));
