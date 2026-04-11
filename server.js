@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 10000;
 cloudinary.config({
   cloud_name: "dd6wpwsae",
   api_key: "131673227297333",
-  api_secret: "-9ngvPWZ7nRcLI7qllA8FlPfw0"
+  api_secret: "_-9ngvPWZ7nRcLl7qllA8FIPfw0"
 });
 
 const storage = new CloudinaryStorage({
