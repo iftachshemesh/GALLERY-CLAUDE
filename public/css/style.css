@@ -453,6 +453,36 @@ body[dir="ltr"] .admin-main { margin-left: 220px; margin-right: 0; }
   margin: 2rem 0; color: #155724;
 }
 
- 
+/* ─── DARK GALLERY BACKGROUND ─── */
+.gallery-page {
+  background: var(--dark);
+  min-height: 100vh;
+}
+.gallery-page .gallery-section {
+  background: var(--dark);
+}
+.gallery-page .gallery-section h2 {
+  color: var(--gold-light);
+}
+.gallery-page .page-header {
+  background: #0f0d0b;
+}
+.gallery-page .painting-card {
+  background: #2d2926;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+}
+.gallery-page .painting-info .p-title {
+  color: var(--gold-light);
+}
+.gallery-page .painting-info .p-meta {
+  color: #9a8f82;
+}
+.gallery-page .page-actions {
+  background: var(--dark);
+  border-top-color: var(--border);
+}
+.gallery-page .legal-footer {
+  background: #0f0d0b;
+}
 
 
