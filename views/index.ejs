@@ -19,8 +19,11 @@
       justify-content: center;
       background: #0a0806;
     }
+    /* Always LTR layout: nav | painting | title */
     .hero-layout {
       display: flex;
+      flex-direction: row;
+      direction: ltr;
       align-items: center;
       justify-content: center;
       gap: 4rem;
@@ -28,23 +31,26 @@
       max-width: 1100px;
       padding: 0 2rem;
     }
-    /* Left vertical nav */
     .hero-nav-left {
       display: flex;
       flex-direction: column;
       gap: 2rem;
-      align-items: flex-end;
+      align-items: flex-start;
       min-width: 180px;
     }
     .hero-nav-left a {
       color: rgba(255,255,255,0.8);
       text-decoration: none;
       font-size: 0.9rem;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       transition: color 0.2s;
       font-family: 'Heebo', sans-serif;
       white-space: nowrap;
+      direction: rtl;
+      text-align: right;
+      display: block;
+      width: 100%;
     }
     .hero-nav-left a:hover { color: var(--gold); }
     .hero-nav-left .lang-btn {
@@ -54,21 +60,26 @@
       color: var(--gold);
       font-size: 0.85rem;
       margin-top: 0.5rem;
+      direction: ltr;
+      text-align: center;
+      width: auto;
+      display: inline-block;
     }
     .hero-nav-left .lang-btn:hover { background: var(--gold); color: #0a0806; }
-    /* Center painting */
     .hero-painting {
       max-height: 75vh;
       max-width: 38vw;
       object-fit: contain;
       display: block;
       flex-shrink: 0;
+      background: transparent;
     }
-    /* Right title */
     .hero-content {
       position: static;
       padding: 0;
       max-width: 300px;
+      direction: rtl;
+      text-align: right;
     }
     .hero-title {
       font-size: clamp(1.6rem, 3vw, 2.8rem);
@@ -87,8 +98,9 @@
     @media (max-width: 800px) {
       body { overflow: auto; }
       .hero { height: auto; padding: 90px 1rem 2rem; }
-      .hero-layout { flex-direction: column; gap: 2rem; }
-      .hero-nav-left { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+      .hero-layout { flex-direction: column !important; gap: 2rem; }
+      .hero-nav-left { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 1rem; align-items: center; width: 100%; }
+      .hero-nav-left a { width: auto; text-align: center; }
       .hero-painting { max-width: 85vw; max-height: 50vh; }
       .hero-content { text-align: center; }
     }
@@ -102,7 +114,7 @@
 <div class="hero">
   <div class="hero-layout">
 
-    <!-- Left: vertical nav -->
+    <!-- Always on physical LEFT side -->
     <div class="hero-nav-left">
       <a href="/<%= lang %>/gallery"><%= lang === 'he' ? 'לגלריה' : 'View Gallery' %></a>
       <a href="/<%= lang %>/about"><%= lang === 'he' ? 'על אודות האמן' : 'About the Artist' %></a>
@@ -111,12 +123,12 @@
       <a href="/<%= lang === 'he' ? 'en' : 'he' %>" class="lang-btn"><%= lang === 'he' ? 'EN' : 'עב' %></a>
     </div>
 
-    <!-- Center: painting -->
+    <!-- Always in CENTER -->
     <img class="hero-painting"
          src="https://res.cloudinary.com/dd6wpwsae/image/upload/hero_zijzst.png"
          alt="painting">
 
-    <!-- Right: title only -->
+    <!-- Always on physical RIGHT side -->
     <div class="hero-content">
       <h1 class="hero-title"><%= lang === 'he' ? 'גלריית הציורים של ד"ר יפתח שמש' : 'Art Gallery of Dr. Iftach Shemesh' %></h1>
       <p class="hero-subtitle"><%= lang === 'he' ? 'אקריליק · פסטל · פחם' : 'Acrylic · Pastel · Charcoal' %></p>
