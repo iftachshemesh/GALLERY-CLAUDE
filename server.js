@@ -2,31 +2,33 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  }
+// ─── CLOUDINARY CONFIG ───────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
-const upload = multer({a
+
+// Storage — שומר ישירות ל-Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => ({
+    folder: 'yiftach-gallery',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff'],
+    public_id: Date.now() + '-' + Math.round(Math.random() * 1e9)
+  })
+});
+
+const upload = multer({
   storage,
-  limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowed = /image\/(jpeg|png|gif|webp|bmp|tiff)|text\/html/;
-    const extAllowed = /\.(jpe?g|png|gif|webp|bmp|tiff|html?|htm)$/i;
-    if (allowed.test(file.mimetype) || extAllowed.test(file.originalname)) {
-      cb(null, true);
-    } else {
-      cb(null, false); // דחה בשקט — לא זורק שגיאה
-    }
-  }
+  limits: { fileSize: 20 * 1024 * 1024 }
 });
 
 app.set('view engine', 'ejs');
@@ -34,7 +36,6 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Simple admin auth middleware
 function adminAuth(req, res, next) {
@@ -69,7 +70,7 @@ app.get(['/:lang(he|en)/gallery', '/gallery'], (req, res) => {
 app.get(['/:lang(he|en)/exhibitions', '/exhibitions'], (req, res) => {
   const lang = req.params.lang || 'he';
   db.all("SELECT * FROM paintings WHERE category = 'exhibitions' ORDER BY sort_order ASC, id ASC", [], (err, rows) => {
-    res.render('exhibitions', { lang, paintings: rows || [], exContent: null });
+    res.render('exhibitions', { lang, paintings: rows || [] });
   });
 });
 
@@ -133,7 +134,6 @@ app.get('/admin', adminAuth, (req, res) => {
   res.render('admin/dashboard', { lang: 'he' });
 });
 
-// Upload paintings
 app.get('/admin/upload', adminAuth, (req, res) => {
   getSuggestions(suggestions => {
     res.render('admin/upload', { lang: 'he', suggestions, saved: req.query.saved === '1' });
@@ -154,15 +154,16 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), (req, res) => {
 
   let done = 0;
   files.forEach((file, i) => {
+    // file.path = ה-URL המלא של Cloudinary
+    const filename = file.path;
     db.run(
       'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES (?,?,?,?,?,?,?,?,?)',
-      [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', file.filename, i],
+      [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', filename, i],
       () => { done++; if (done === files.length) res.redirect('/admin/manage'); }
     );
   });
 });
 
-// Manage paintings — always reload fresh from DB
 app.get('/admin/manage', adminAuth, (req, res) => {
   db.all('SELECT * FROM paintings ORDER BY category, sort_order ASC, id ASC', [], (err, rows) => {
     getSuggestions(suggestions => {
@@ -171,7 +172,6 @@ app.get('/admin/manage', adminAuth, (req, res) => {
   });
 });
 
-// Edit painting — save then redirect back to manage (fresh DB load)
 app.post('/admin/edit/:id', adminAuth, (req, res) => {
   const { title_he, title_en, technique_he, technique_en, year, size, category } = req.body;
   if (title_he) db.run('INSERT OR IGNORE INTO autocomplete_titles (value) VALUES (?)', [title_he]);
@@ -183,15 +183,22 @@ app.post('/admin/edit/:id', adminAuth, (req, res) => {
   db.run(
     'UPDATE paintings SET title_he=?, title_en=?, technique_he=?, technique_en=?, year=?, size=?, category=? WHERE id=?',
     [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', req.params.id],
-    (err) => {
-      // redirect with cache-busting to force fresh page load
-      res.redirect('/admin/manage?updated=' + Date.now());
-    }
+    () => res.redirect('/admin/manage?updated=' + Date.now())
   );
 });
 
 app.post('/admin/delete/:id', adminAuth, (req, res) => {
-  db.run('DELETE FROM paintings WHERE id = ?', [req.params.id], () => res.redirect('/admin/manage'));
+  // מחק גם מ-Cloudinary
+  db.get('SELECT filename FROM paintings WHERE id = ?', [req.params.id], (err, row) => {
+    if (row && row.filename && row.filename.startsWith('http')) {
+      // חלץ את ה-public_id מה-URL
+      const parts = row.filename.split('/');
+      const file = parts[parts.length - 1].split('.')[0];
+      const folder = parts[parts.length - 2];
+      cloudinary.uploader.destroy(folder + '/' + file).catch(() => {});
+    }
+    db.run('DELETE FROM paintings WHERE id = ?', [req.params.id], () => res.redirect('/admin/manage'));
+  });
 });
 
 app.post('/admin/reorder', adminAuth, (req, res) => {
@@ -206,7 +213,6 @@ app.post('/admin/reorder', adminAuth, (req, res) => {
   });
 });
 
-// About editor
 app.get('/admin/about', adminAuth, (req, res) => {
   db.get('SELECT * FROM about WHERE id = 1', [], (err, row) => {
     res.render('admin/about', { lang: 'he', about: row || { content_he: '', content_en: '' } });
@@ -237,5 +243,4 @@ function getSuggestions(cb) {
   });
 }
 
-app.get('/debug', (req,res) => res.json({dir: __dirname, files: require('fs').readdirSync(__dirname + '/public')}));
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));

@@ -40,6 +40,14 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     value TEXT UNIQUE
   )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
 });
 
 module.exports = db;

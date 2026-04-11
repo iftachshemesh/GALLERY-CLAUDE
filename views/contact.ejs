@@ -3,8 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= lang === 'he' ? 'צור קשר' : 'Contact' %></title>
+  <title><%= lang === 'he' ? 'צור קשר — ד"ר יפתח שמש' : 'Contact — Dr. Iftach Shemesh' %></title>
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .guestbook { margin-top: 3rem; }
+    .guestbook-title {
+      font-size: 1.4rem;
+      color: var(--charcoal);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--gold, #c9a84c);
+    }
+    .guestbook-entry {
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1rem;
+      background: #faf7ef;
+      border: 1px solid #e8e0cc;
+      border-radius: 6px;
+    }
+    .guestbook-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .guestbook-name {
+      font-weight: 600;
+      color: var(--charcoal);
+      font-size: 1rem;
+    }
+    .guestbook-date {
+      font-size: 0.8rem;
+      color: var(--muted, #888);
+    }
+    .guestbook-message {
+      color: #444;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .guestbook-empty {
+      color: var(--muted, #888);
+      font-style: italic;
+      text-align: center;
+      padding: 2rem 0;
+    }
+    .contact-form-card {
+      background: white;
+      border: 1px solid #e8e0cc;
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+  </style>
 </head>
 <body dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
 
@@ -25,63 +78,104 @@
       <%= lang === 'he' ? 'צור קשר' : 'Contact' %>
     </h1>
 
-    <% if (sent) { %>
-    <div class="success-box">
-      <p style="font-size:1.2rem;">✓ <%= lang === 'he' ? 'ההודעה נשלחה בהצלחה!' : 'Message sent successfully!' %></p>
-      <p style="margin-top:0.5rem; color:#555;">
-        <%= lang === 'he' ? 'נחזור אליך בהקדם האפשרי.' : 'We will get back to you soon.' %>
-      </p>
-    </div>
-    <% } else { %>
-    
-    <% if (error) { %>
-    <div class="alert alert-error">
-      <%= lang === 'he' ? 'אירעה שגיאה בשליחה. אנא נסה שוב.' : 'An error occurred. Please try again.' %>
-    </div>
-    <% } %>
+    <!-- Contact Form -->
+    <div class="contact-form-card">
+      <% if (sent) { %>
+      <div class="success-box">
+        <p style="font-size:1.2rem;">✓ <%= lang === 'he' ? 'ההודעה נשלחה בהצלחה!' : 'Message sent successfully!' %></p>
+        <p style="margin-top:0.5rem; color:#555;">
+          <%= lang === 'he' ? 'תודה! ההודעה נוספה לספר האורחים.' : 'Thank you! Your message was added to the guestbook.' %>
+        </p>
+      </div>
+      <% } else { %>
 
-    <form method="POST" action="/<%= lang %>/contact">
-      <div class="form-group">
-        <label><%= lang === 'he' ? 'שם מלא' : 'Full Name' %></label>
-        <input type="text" name="name" required placeholder="<%= lang === 'he' ? 'שמך' : 'Your name' %>">
+      <% if (error) { %>
+      <div class="alert alert-error" style="margin-bottom:1rem;">
+        <%= lang === 'he' ? 'אירעה שגיאה בשליחה. אנא נסה שוב.' : 'An error occurred. Please try again.' %>
       </div>
-      <div class="form-group">
-        <label><%= lang === 'he' ? 'דואר אלקטרוני' : 'Email' %></label>
-        <input type="email" name="email" required placeholder="<%= lang === 'he' ? 'כתובת המייל שלך' : 'your@email.com' %>">
-      </div>
-      <div class="form-group">
-        <label><%= lang === 'he' ? 'הודעה' : 'Message' %></label>
-        <textarea name="message" required placeholder="<%= lang === 'he' ? 'כתוב את הודעתך כאן...' : 'Write your message here...' %>"></textarea>
-      </div>
-      <button type="submit" class="btn btn-gold">
-        <%= lang === 'he' ? 'שלח הודעה' : 'Send Message' %>
-      </button>
-    </form>
-    <% } %>
+      <% } %>
 
+      <form method="POST" action="/<%= lang %>/contact">
+        <div class="form-group">
+          <label><%= lang === 'he' ? 'שם מלא' : 'Full Name' %></label>
+          <input type="text" name="name" required placeholder="<%= lang === 'he' ? 'שמך' : 'Your name' %>">
+        </div>
+        <div class="form-group">
+          <label><%= lang === 'he' ? 'דואר אלקטרוני' : 'Email' %></label>
+          <input type="email" name="email" required placeholder="<%= lang === 'he' ? 'כתובת המייל שלך' : 'your@email.com' %>">
+        </div>
+        <div class="form-group">
+          <label><%= lang === 'he' ? 'הודעה' : 'Message' %></label>
+          <textarea name="message" required rows="6"
+            placeholder="<%= lang === 'he' ? 'כתוב את הודעתך כאן...' : 'Write your message here...' %>"
+            style="width:100%; resize:vertical;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-gold">
+          <%= lang === 'he' ? 'שלח הודעה' : 'Send Message' %>
+        </button>
+      </form>
+      <% } %>
+    </div>
+
+    <!-- Guestbook -->
+    <div class="guestbook">
+      <h2 class="guestbook-title">
+        <%= lang === 'he' ? '📖 ספר אורחים' : '📖 Guestbook' %>
+      </h2>
+
+      <% if (messages && messages.length > 0) { %>
+        <% messages.forEach(m => { %>
+        <div class="guestbook-entry">
+          <div class="guestbook-entry-header">
+            <span class="guestbook-name">👤 <%= m.name %></span>
+            <span class="guestbook-date">
+              <%= new Date(m.created_at).toLocaleDateString(lang === 'he' ? 'he-IL' : 'en-GB', { year:'numeric', month:'long', day:'numeric' }) %>
+            </span>
+          </div>
+          <div class="guestbook-message"><%= m.message %></div>
+        </div>
+        <% }) %>
+      <% } else { %>
+        <p class="guestbook-empty">
+          <%= lang === 'he' ? 'אין הודעות עדיין. היה הראשון לכתוב!' : 'No messages yet. Be the first to write!' %>
+        </p>
+      <% } %>
+    </div>
+
+    <!-- Back to Home -->
     <div class="page-actions" style="margin-top:2rem; padding:1.5rem 0; border-top:1px solid var(--border);">
       <a href="/<%= lang %>" class="btn btn-dark"><%= lang === 'he' ? '← חזרה לעמוד הבית' : '← Back to Home' %></a>
-      <button class="btn btn-dark btn-sm" onclick="toggleAccess()">♿</button>
     </div>
+
   </div>
 </div>
 
 <div class="legal-footer">
-  © <%= new Date().getFullYear() %> ד"ר יפתח שמש · כל הזכויות שמורות
+  © <%= new Date().getFullYear() %> ד"ר יפתח שמש · כל הזכויות שמורות · All Rights Reserved
 </div>
 
-<button class="accessibility-btn" onclick="toggleAccess()">♿</button>
+<button class="accessibility-btn" onclick="toggleAccess()" aria-label="נגישות">♿</button>
 <div class="accessibility-panel" id="accessPanel">
-  <h4>נגישות</h4>
-  <div class="access-option"><span>טקסט</span><button onclick="changeFontSize(1)">A+</button><button onclick="changeFontSize(-1)">A-</button></div>
-  <div class="access-option"><span>ניגודיות</span><button onclick="toggleContrast()">◑</button></div>
+  <h4><%= lang === 'he' ? 'נגישות' : 'Accessibility' %></h4>
+  <div class="access-option">
+    <span><%= lang === 'he' ? 'הגדל טקסט' : 'Larger text' %></span>
+    <button onclick="changeFontSize(1)">A+</button>
+    <button onclick="changeFontSize(-1)">A-</button>
+  </div>
+  <div class="access-option">
+    <span><%= lang === 'he' ? 'ניגודיות' : 'Contrast' %></span>
+    <button onclick="toggleContrast()">◑</button>
+  </div>
 </div>
+
 <script>
-  function toggleAccess(){document.getElementById('accessPanel').classList.toggle('open');}
-  let fontSize=100;
-  function changeFontSize(d){fontSize=Math.min(140,Math.max(80,fontSize+d*10));document.body.style.fontSize=fontSize+'%';}
-  function toggleContrast(){document.body.classList.toggle('high-contrast');}
+  function toggleAccess() { document.getElementById('accessPanel').classList.toggle('open'); }
+  let fontSize = 100;
+  function changeFontSize(d) {
+    fontSize = Math.min(140, Math.max(80, fontSize + d * 10));
+    document.body.style.fontSize = fontSize + '%';
+  }
+  function toggleContrast() { document.body.classList.toggle('high-contrast'); }
 </script>
 </body>
 </html>
-
