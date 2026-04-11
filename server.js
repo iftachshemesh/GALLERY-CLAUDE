@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
-const nodemailer = require('nodemailer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const db = require('./db');
@@ -56,7 +55,7 @@ app.get(['/:lang(he|en)/gallery', '/gallery'], (req, res) => {
   const results = {};
   let done = 0;
   categories.forEach(cat => {
-    db.all('SELECT * FROM paintings WHERE category = ? ORDER BY sort_order ASC, id ASC', [cat], (err, rows) => {
+    db.all('SELECT * FROM paintings WHERE category = $1 ORDER BY sort_order ASC, id ASC', [cat], (err, rows) => {
       results[cat] = rows || [];
       done++;
       if (done === categories.length) {
@@ -91,7 +90,7 @@ app.post(['/:lang(he|en)/contact', '/contact'], (req, res) => {
   const lang = req.params.lang || 'he';
   const { name, email, message } = req.body;
 
-  db.run('INSERT INTO messages (name, email, message) VALUES (?, ?, ?)', [name, email, message], () => {
+  db.run('INSERT INTO messages (name, email, message) VALUES ($1, $2, $3)', [name, email || '', message], () => {
     db.all('SELECT * FROM messages ORDER BY created_at DESC', [], (err, messages) => {
       res.render('contact', { lang, sent: true, error: false, messages: messages || [] });
     });
@@ -134,25 +133,25 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), (req, res) => {
   const { category, title_he, title_en, technique_he, technique_en, year, size } = req.body;
   const files = req.files || [];
 
-  if (title_he) db.run('INSERT OR IGNORE INTO autocomplete_titles (value) VALUES (?)', [title_he]);
-  if (title_en) db.run('INSERT OR IGNORE INTO autocomplete_titles (value) VALUES (?)', [title_en]);
-  if (technique_he) db.run('INSERT OR IGNORE INTO autocomplete_techniques (value) VALUES (?)', [technique_he]);
-  if (technique_en) db.run('INSERT OR IGNORE INTO autocomplete_techniques (value) VALUES (?)', [technique_en]);
-  if (size) db.run('INSERT OR IGNORE INTO autocomplete_sizes (value) VALUES (?)', [size]);
+  if (title_he) db.run('INSERT INTO autocomplete_titles (value) VALUES ($1) ON CONFLICT DO NOTHING', [title_he]);
+  if (title_en) db.run('INSERT INTO autocomplete_titles (value) VALUES ($1) ON CONFLICT DO NOTHING', [title_en]);
+  if (technique_he) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_he]);
+  if (technique_en) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_en]);
+  if (size) db.run('INSERT INTO autocomplete_sizes (value) VALUES ($1) ON CONFLICT DO NOTHING', [size]);
 
   if (files.length === 0) return res.redirect('/admin/upload');
 
   let done = 0;
   files.forEach((file, i) => {
     db.run(
-      'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES (?,?,?,?,?,?,?,?,?)',
+      'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
       [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', file.path, i],
       () => { done++; if (done === files.length) res.redirect('/admin/manage'); }
     );
   });
 });
 
-// Manage paintings — always reload fresh from DB
+// Manage paintings
 app.get('/admin/manage', adminAuth, (req, res) => {
   db.all('SELECT * FROM paintings ORDER BY category, sort_order ASC, id ASC', [], (err, rows) => {
     getSuggestions(suggestions => {
@@ -164,14 +163,14 @@ app.get('/admin/manage', adminAuth, (req, res) => {
 // Edit painting
 app.post('/admin/edit/:id', adminAuth, (req, res) => {
   const { title_he, title_en, technique_he, technique_en, year, size, category } = req.body;
-  if (title_he) db.run('INSERT OR IGNORE INTO autocomplete_titles (value) VALUES (?)', [title_he]);
-  if (title_en) db.run('INSERT OR IGNORE INTO autocomplete_titles (value) VALUES (?)', [title_en]);
-  if (technique_he) db.run('INSERT OR IGNORE INTO autocomplete_techniques (value) VALUES (?)', [technique_he]);
-  if (technique_en) db.run('INSERT OR IGNORE INTO autocomplete_techniques (value) VALUES (?)', [technique_en]);
-  if (size) db.run('INSERT OR IGNORE INTO autocomplete_sizes (value) VALUES (?)', [size]);
+  if (title_he) db.run('INSERT INTO autocomplete_titles (value) VALUES ($1) ON CONFLICT DO NOTHING', [title_he]);
+  if (title_en) db.run('INSERT INTO autocomplete_titles (value) VALUES ($1) ON CONFLICT DO NOTHING', [title_en]);
+  if (technique_he) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_he]);
+  if (technique_en) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_en]);
+  if (size) db.run('INSERT INTO autocomplete_sizes (value) VALUES ($1) ON CONFLICT DO NOTHING', [size]);
 
   db.run(
-    'UPDATE paintings SET title_he=?, title_en=?, technique_he=?, technique_en=?, year=?, size=?, category=? WHERE id=?',
+    'UPDATE paintings SET title_he=$1, title_en=$2, technique_he=$3, technique_en=$4, year=$5, size=$6, category=$7 WHERE id=$8',
     [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', req.params.id],
     () => {
       res.redirect('/admin/manage?updated=' + Date.now());
@@ -180,7 +179,7 @@ app.post('/admin/edit/:id', adminAuth, (req, res) => {
 });
 
 app.post('/admin/delete/:id', adminAuth, (req, res) => {
-  db.run('DELETE FROM paintings WHERE id = ?', [req.params.id], () => res.redirect('/admin/manage'));
+  db.run('DELETE FROM paintings WHERE id = $1', [req.params.id], () => res.redirect('/admin/manage'));
 });
 
 app.post('/admin/reorder', adminAuth, (req, res) => {
@@ -188,7 +187,7 @@ app.post('/admin/reorder', adminAuth, (req, res) => {
   if (!Array.isArray(order)) return res.json({ ok: false });
   let done = 0;
   order.forEach((id, i) => {
-    db.run('UPDATE paintings SET sort_order = ? WHERE id = ?', [i, id], () => {
+    db.run('UPDATE paintings SET sort_order = $1 WHERE id = $2', [i, id], () => {
       done++;
       if (done === order.length) res.json({ ok: true });
     });
@@ -204,7 +203,7 @@ app.get('/admin/about', adminAuth, (req, res) => {
 
 app.post('/admin/about', adminAuth, (req, res) => {
   const { content_he, content_en } = req.body;
-  db.run('UPDATE about SET content_he=?, content_en=?, updated_at=CURRENT_TIMESTAMP WHERE id=1',
+  db.run('UPDATE about SET content_he=$1, content_en=$2, updated_at=CURRENT_TIMESTAMP WHERE id=1',
     [content_he, content_en],
     () => res.redirect('/admin/about')
   );
