@@ -1,12 +1,14 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const { Pool } = require('pg');
 
-const DB_PATH = path.join(__dirname, 'gallery.db');
-const db = new sqlite3.Database(DB_PATH);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS paintings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+// Create tables if they don't exist
+pool.query(`
+  CREATE TABLE IF NOT EXISTS paintings (
+    id SERIAL PRIMARY KEY,
     title_he TEXT,
     title_en TEXT,
     technique_he TEXT,
@@ -16,38 +18,62 @@ db.serialize(() => {
     category TEXT,
     filename TEXT NOT NULL,
     sort_order INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
 
-  db.run(`CREATE TABLE IF NOT EXISTS about (
+  CREATE TABLE IF NOT EXISTS about (
     id INTEGER PRIMARY KEY DEFAULT 1,
     content_he TEXT DEFAULT '',
     content_en TEXT DEFAULT '',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
 
-  db.run(`INSERT OR IGNORE INTO about (id, content_he, content_en) VALUES (1, '', '')`);
+  INSERT INTO about (id, content_he, content_en)
+  VALUES (1, '', '')
+  ON CONFLICT (id) DO NOTHING;
 
-  db.run(`CREATE TABLE IF NOT EXISTS autocomplete_titles (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+  CREATE TABLE IF NOT EXISTS autocomplete_titles (
+    id SERIAL PRIMARY KEY,
     value TEXT UNIQUE
-  )`);
-  db.run(`CREATE TABLE IF NOT EXISTS autocomplete_techniques (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    value TEXT UNIQUE
-  )`);
-  db.run(`CREATE TABLE IF NOT EXISTS autocomplete_sizes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    value TEXT UNIQUE
-  )`);
+  );
 
-  db.run(`CREATE TABLE IF NOT EXISTS messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+  CREATE TABLE IF NOT EXISTS autocomplete_techniques (
+    id SERIAL PRIMARY KEY,
+    value TEXT UNIQUE
+  );
+
+  CREATE TABLE IF NOT EXISTS autocomplete_sizes (
+    id SERIAL PRIMARY KEY,
+    value TEXT UNIQUE
+  );
+
+  CREATE TABLE IF NOT EXISTS messages (
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    email TEXT NOT NULL,
+    email TEXT,
     message TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
-});
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`).then(() => console.log('Database tables ready'))
+  .catch(err => console.error('DB init error:', err));
+
+// Wrapper to match SQLite-style API used in server.js
+const db = {
+  all: (sql, params, cb) => {
+    pool.query(sql, params)
+      .then(r => cb(null, r.rows))
+      .catch(e => cb(e, []));
+  },
+  get: (sql, params, cb) => {
+    pool.query(sql, params)
+      .then(r => cb(null, r.rows[0] || null))
+      .catch(e => cb(e, null));
+  },
+  run: (sql, params, cb) => {
+    pool.query(sql, params)
+      .then(r => { if (cb) cb(null); })
+      .catch(e => { if (cb) cb(e); });
+  }
+};
 
 module.exports = db;
