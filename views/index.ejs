@@ -22,17 +22,16 @@
       justify-content: center;
     }
 
-    /* Use absolute left/right to bypass RTL */
     .hero-inner {
       position: relative;
       width: 100%;
-      max-width: 1100px;
-      height: 80vh;
+      max-width: 1300px;
+      height: 85vh;
       margin: 0 auto;
       padding: 0 2rem;
     }
 
-    /* NAV — always pinned to physical LEFT */
+    /* NAV — physical LEFT */
     .hero-nav-left {
       position: absolute;
       left: 2rem;
@@ -46,7 +45,7 @@
     .hero-nav-left a {
       color: rgba(255,255,255,0.8);
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       transition: color 0.2s;
@@ -66,7 +65,7 @@
     }
     .hero-nav-left .lang-btn:hover { background: var(--gold); color: #0a0806; }
 
-    /* PAINTING — always in physical CENTER */
+    /* PAINTING — physical CENTER, bigger */
     .hero-painting-wrap {
       position: absolute;
       left: 50%;
@@ -74,19 +73,20 @@
       transform: translate(-50%, -50%);
     }
     .hero-painting {
-      max-height: 72vh;
-      max-width: 35vw;
+      height: 82vh;
+      max-width: 50vw;
       object-fit: contain;
       display: block;
+      mix-blend-mode: normal;
     }
 
-    /* TITLE — always pinned to physical RIGHT */
+    /* TITLE — physical RIGHT */
     .hero-content {
       position: absolute;
       right: 2rem;
       top: 50%;
       transform: translateY(-50%);
-      max-width: 280px;
+      max-width: 260px;
       text-align: right;
       direction: rtl;
     }
@@ -111,7 +111,7 @@
       .hero-inner { height: auto; position: static; display: flex; flex-direction: column; align-items: center; gap: 2rem; padding: 0 1rem; }
       .hero-nav-left, .hero-painting-wrap, .hero-content { position: static; transform: none; }
       .hero-nav-left { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 1rem; }
-      .hero-painting { max-width: 85vw; max-height: 50vh; }
+      .hero-painting { height: auto; max-width: 85vw; max-height: 50vh; }
       .hero-content { text-align: center; max-width: 100%; }
     }
   </style>
@@ -124,7 +124,6 @@
 <div class="hero">
   <div class="hero-inner">
 
-    <!-- Physical LEFT: nav links -->
     <div class="hero-nav-left">
       <a href="/<%= lang %>/gallery"><%= lang === 'he' ? 'לגלריה' : 'View Gallery' %></a>
       <a href="/<%= lang %>/about"><%= lang === 'he' ? 'על אודות האמן' : 'About the Artist' %></a>
@@ -133,14 +132,12 @@
       <a href="/<%= lang === 'he' ? 'en' : 'he' %>" class="lang-btn"><%= lang === 'he' ? 'EN' : 'עב' %></a>
     </div>
 
-    <!-- Physical CENTER: painting -->
     <div class="hero-painting-wrap">
       <img class="hero-painting"
            src="https://res.cloudinary.com/dd6wpwsae/image/upload/hero_zijzst.png"
            alt="painting">
     </div>
 
-    <!-- Physical RIGHT: title -->
     <div class="hero-content">
       <h1 class="hero-title"><%= lang === 'he' ? 'גלריית הציורים של ד"ר יפתח שמש' : 'Art Gallery of Dr. Iftach Shemesh' %></h1>
       <p class="hero-subtitle"><%= lang === 'he' ? 'אקריליק · פסטל · פחם' : 'Acrylic · Pastel · Charcoal' %></p>
