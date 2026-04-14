@@ -198,7 +198,7 @@ app.post(
 
 app.get('/admin/login', (req, res) => {
   if (req.session.isAdmin) return res.redirect('/admin');
-  res.render('admin/login', { lang: 'he', error: false });
+  res.render('admin/login', { lang: 'he', error: false, csrfToken: res.locals.csrfToken });
 });
 
 app.post(
