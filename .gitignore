@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+*.db
+gallery.db
+database.db
+server_old.js
+server_backup.js
+server_check.js
