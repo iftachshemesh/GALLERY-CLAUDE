@@ -22,6 +22,7 @@
   <div class="alert alert-error" style="margin-bottom:1rem;">סיסמא שגויה</div>
   <% } %>
   <form method="POST" action="/admin/login">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <input type="password" name="password" placeholder="סיסמא" autofocus>
     <button type="submit" class="btn btn-gold" style="width:100%">כניסה</button>
   </form>
