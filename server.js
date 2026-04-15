@@ -11,9 +11,6 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // ─── ADMIN PASSWORD ───────────────────────────────────────────────────────────
-// To generate a new hash, run once in Node:
-//   require('bcryptjs').hashSync('your-password', 12)
-// Then set the result as ADMIN_PASSWORD_HASH in your environment variables.
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 if (!ADMIN_PASSWORD_HASH) {
   console.error('FATAL: ADMIN_PASSWORD_HASH env variable is not set. Refusing to start.');
@@ -48,6 +45,7 @@ const upload = multer({
 // ─── APP SETUP ────────────────────────────────────────────────────────────────
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -61,18 +59,16 @@ if (!process.env.SESSION_SECRET) {
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    maxAge: 2 * 60 * 60 * 1000 // 2 hours
+    maxAge: 2 * 60 * 60 * 1000
   }
 }));
 
 // ─── CSRF PROTECTION ─────────────────────────────────────────────────────────
-// Lightweight double-submit CSRF token (no csurf dependency needed)
-// Sets a token in the session and exposes a helper for views.
 app.use((req, res, next) => {
   if (!req.session.csrfToken) {
     req.session.csrfToken = require('crypto').randomBytes(32).toString('hex');
@@ -163,24 +159,18 @@ app.post(
     if (!errors.isEmpty()) {
       return res.render('contact', { lang, sent: false, error: true });
     }
-
     const { name, email, message } = req.body;
-
     if (!process.env.MAIL_USER || !process.env.MAIL_PASS) {
       console.error('Mail credentials not configured.');
       return res.render('contact', { lang, sent: false, error: true });
     }
-
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
-        auth: {
-          user: process.env.MAIL_USER,
-          pass: process.env.MAIL_PASS
-        }
+        auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
       });
       await transporter.sendMail({
-        from: `"Gallery Contact" <${process.env.MAIL_USER}>`, // must be authed sender
+        from: `"Gallery Contact" <${process.env.MAIL_USER}>`,
         replyTo: email,
         to: process.env.MAIL_USER,
         subject: `Gallery Contact: ${name}`,
@@ -216,7 +206,6 @@ app.post(
         res.redirect('/admin');
       });
     } else {
-      // Small delay to blunt brute-force attempts
       setTimeout(() => res.render('admin/login', { lang: 'he', error: true }), 500);
     }
   }
@@ -234,7 +223,6 @@ app.get('/admin', adminAuth, (req, res) => {
   res.render('admin/dashboard', { lang: 'he' });
 });
 
-// Upload paintings
 app.get('/admin/upload', adminAuth, (req, res) => {
   const suggestions = {};
   db.all('SELECT value FROM autocomplete_titles', [], (err, rows) => {
@@ -252,18 +240,14 @@ app.get('/admin/upload', adminAuth, (req, res) => {
 app.post('/admin/upload', adminAuth, csrfCheck, upload.array('images', 50), paintingValidators, (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).send('Invalid input.');
-
   const { category, title_he, title_en, technique_he, technique_en, year, size } = req.body;
   const files = req.files || [];
-
   if (title_he) db.run('INSERT OR IGNORE INTO autocomplete_titles (value) VALUES (?)', [title_he]);
   if (title_en) db.run('INSERT OR IGNORE INTO autocomplete_titles (value) VALUES (?)', [title_en]);
   if (technique_he) db.run('INSERT OR IGNORE INTO autocomplete_techniques (value) VALUES (?)', [technique_he]);
   if (technique_en) db.run('INSERT OR IGNORE INTO autocomplete_techniques (value) VALUES (?)', [technique_en]);
   if (size) db.run('INSERT OR IGNORE INTO autocomplete_sizes (value) VALUES (?)', [size]);
-
   if (files.length === 0) return res.redirect('/admin/upload');
-
   let done = 0;
   files.forEach((file, i) => {
     db.run(
@@ -274,7 +258,6 @@ app.post('/admin/upload', adminAuth, csrfCheck, upload.array('images', 50), pain
   });
 });
 
-// Manage paintings
 app.get('/admin/manage', adminAuth, (req, res) => {
   db.all('SELECT * FROM paintings ORDER BY category, sort_order ASC, id ASC', [], (err, rows) => {
     const suggestions = {};
@@ -292,22 +275,18 @@ app.get('/admin/manage', adminAuth, (req, res) => {
 });
 
 app.post('/admin/edit/:id',
-  adminAuth,
-  csrfCheck,
+  adminAuth, csrfCheck,
   param('id').isInt({ min: 1 }),
   paintingValidators,
   (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).send('Invalid input.');
-
     const { title_he, title_en, technique_he, technique_en, year, size, category } = req.body;
-
     if (title_he) db.run('INSERT OR IGNORE INTO autocomplete_titles (value) VALUES (?)', [title_he]);
     if (title_en) db.run('INSERT OR IGNORE INTO autocomplete_titles (value) VALUES (?)', [title_en]);
     if (technique_he) db.run('INSERT OR IGNORE INTO autocomplete_techniques (value) VALUES (?)', [technique_he]);
     if (technique_en) db.run('INSERT OR IGNORE INTO autocomplete_techniques (value) VALUES (?)', [technique_en]);
     if (size) db.run('INSERT OR IGNORE INTO autocomplete_sizes (value) VALUES (?)', [size]);
-
     db.run(
       'UPDATE paintings SET title_he=?, title_en=?, technique_he=?, technique_en=?, year=?, size=?, category=? WHERE id=?',
       [title_he, title_en, technique_he, technique_en, year, size, category, parseInt(req.params.id)],
@@ -317,8 +296,7 @@ app.post('/admin/edit/:id',
 );
 
 app.post('/admin/delete/:id',
-  adminAuth,
-  csrfCheck,
+  adminAuth, csrfCheck,
   param('id').isInt({ min: 1 }),
   (req, res) => {
     const errors = validationResult(req);
@@ -330,13 +308,10 @@ app.post('/admin/delete/:id',
 app.post('/admin/reorder', adminAuth, csrfCheck, (req, res) => {
   const { order } = req.body;
   if (!Array.isArray(order)) return res.json({ ok: false });
-
-  // Validate all entries are positive integers before touching the DB
   const ids = order.map(id => parseInt(id, 10));
   if (ids.some(id => !Number.isInteger(id) || id < 1)) {
     return res.status(400).json({ ok: false, error: 'Invalid IDs' });
   }
-
   let done = 0;
   ids.forEach((id, i) => {
     db.run('UPDATE paintings SET sort_order = ? WHERE id = ?', [i, id], () => {
@@ -346,7 +321,6 @@ app.post('/admin/reorder', adminAuth, csrfCheck, (req, res) => {
   });
 });
 
-// About editor
 app.get('/admin/about', adminAuth, (req, res) => {
   db.get('SELECT * FROM about WHERE id = 1', [], (err, row) => {
     res.render('admin/about', { lang: 'he', about: row || { content_he: '', content_en: '' } });
@@ -354,8 +328,7 @@ app.get('/admin/about', adminAuth, (req, res) => {
 });
 
 app.post('/admin/about',
-  adminAuth,
-  csrfCheck,
+  adminAuth, csrfCheck,
   [
     body('content_he').trim().isLength({ max: 10000 }),
     body('content_en').trim().isLength({ max: 10000 })
