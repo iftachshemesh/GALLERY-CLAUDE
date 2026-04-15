@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
@@ -17,13 +18,17 @@ if (!ADMIN_PASSWORD_HASH) {
   process.exit(1);
 }
 
+// ─── ENSURE UPLOADS FOLDER EXISTS ────────────────────────────────────────────
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
 // ─── ALLOWED MIME TYPES FOR UPLOADS ──────────────────────────────────────────
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const ALLOWED_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
 
 // ─── FILE STORAGE ─────────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
+  destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, unique + path.extname(file.originalname).toLowerCase());
@@ -49,7 +54,7 @@ app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(uploadsDir));
 
 // ─── SESSION ──────────────────────────────────────────────────────────────────
 if (!process.env.SESSION_SECRET) {
