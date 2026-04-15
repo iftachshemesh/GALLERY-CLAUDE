@@ -193,7 +193,6 @@ app.get('/admin/login', (req, res) => {
 
 app.post(
   '/admin/login',
-  csrfCheck,
   [body('password').notEmpty()],
   async (req, res) => {
     const { password } = req.body;
