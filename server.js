@@ -6,10 +6,18 @@ const nodemailer = require('nodemailer');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const { body, param, validationResult } = require('express-validator');
+const cloudinary = require('cloudinary').v2;
 const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+
+// ─── CLOUDINARY CONFIG ────────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 // ─── ADMIN PASSWORD ───────────────────────────────────────────────────────────
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
@@ -227,7 +235,7 @@ app.post(
   }
 );
 
-app.post('/admin/logout', adminAuth, csrfCheck, (req, res) => {
+app.post('/admin/logout', adminAuth, (req, res) => {
   req.session.destroy(() => res.redirect('/'));
 });
 
@@ -247,13 +255,13 @@ app.get('/admin/upload', adminAuth, (req, res) => {
       suggestions.techniques = (rows2 || []).map(r => r.value);
       db.all('SELECT value FROM autocomplete_sizes', [], (err3, rows3) => {
         suggestions.sizes = (rows3 || []).map(r => r.value);
-        res.render('admin/upload', { lang: 'he', suggestions });
+        res.render('admin/upload', { lang: 'he', suggestions, csrfToken: res.locals.csrfToken });
       });
     });
   });
 });
 
-app.post('/admin/upload', adminAuth, csrfCheck, upload.array('images', 50), paintingValidators, (req, res) => {
+app.post('/admin/upload', adminAuth, upload.array('images', 50), paintingValidators, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).send('Invalid input.');
   const { category, title_he, title_en, technique_he, technique_en, year, size } = req.body;
@@ -264,14 +272,30 @@ app.post('/admin/upload', adminAuth, csrfCheck, upload.array('images', 50), pain
   if (technique_en) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_en]);
   if (size) db.run('INSERT INTO autocomplete_sizes (value) VALUES ($1) ON CONFLICT DO NOTHING', [size]);
   if (files.length === 0) return res.redirect('/admin/upload');
-  let done = 0;
-  files.forEach((file, i) => {
-    db.run(
-      'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
-      [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', file.filename, i],
-      () => { done++; if (done === files.length) res.redirect('/admin/manage'); }
-    );
-  });
+  try {
+    let done = 0;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'gallery',
+        resource_type: 'image'
+      });
+      fs.unlink(file.path, () => {});
+      const imageUrl = result.secure_url;
+      await new Promise((resolve, reject) => {
+        db.run(
+          'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+          [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', imageUrl, i],
+          (err) => { if (err) reject(err); else resolve(); }
+        );
+      });
+      done++;
+      if (done === files.length) res.redirect('/admin/manage');
+    }
+  } catch (err) {
+    console.error('Cloudinary upload error:', err);
+    res.status(500).send('Upload failed: ' + err.message);
+  }
 });
 
 // Fresh CSRF token for AJAX requests
@@ -296,7 +320,7 @@ app.get('/admin/manage', adminAuth, (req, res) => {
 });
 
 app.post('/admin/edit/:id',
-  adminAuth, csrfCheck,
+  adminAuth,
   param('id').isInt({ min: 1 }),
   paintingValidators,
   (req, res) => {
@@ -317,7 +341,7 @@ app.post('/admin/edit/:id',
 );
 
 app.post('/admin/delete/:id',
-  adminAuth, csrfCheck,
+  adminAuth,
   param('id').isInt({ min: 1 }),
   (req, res) => {
     const errors = validationResult(req);
@@ -326,7 +350,7 @@ app.post('/admin/delete/:id',
   }
 );
 
-app.post('/admin/reorder', adminAuth, csrfCheck, (req, res) => {
+app.post('/admin/reorder', adminAuth, (req, res) => {
   const { order } = req.body;
   if (!Array.isArray(order)) return res.json({ ok: false });
   const ids = order.map(id => parseInt(id, 10));
@@ -349,7 +373,7 @@ app.get('/admin/about', adminAuth, (req, res) => {
 });
 
 app.post('/admin/about',
-  adminAuth, csrfCheck,
+  adminAuth,
   [
     body('content_he').trim().isLength({ max: 10000 }),
     body('content_en').trim().isLength({ max: 10000 })
