@@ -16,12 +16,13 @@
       <a href="/admin/manage" class="btn btn-dark btn-sm">← לרשימת הציורים</a>
     </div>
 
-    <% if (saved) { %>
+    <% if (locals.saved) { %>
     <div class="alert alert-success" style="margin-bottom:1.5rem;">✓ הקבצים הועלו בהצלחה!</div>
     <% } %>
 
     <div class="admin-card">
       <form method="POST" action="/admin/upload" enctype="multipart/form-data" id="uploadForm">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
         <!-- Category -->
         <div class="form-group">
