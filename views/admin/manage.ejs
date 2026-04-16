@@ -245,23 +245,36 @@
   document.getElementById('editForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const id = this.dataset.id;
-
-    // Fetch fresh CSRF token
-    const tokenRes = await fetch('/admin/csrf-token');
-    const { csrfToken } = await tokenRes.json();
-
-    const formData = new FormData(this);
-    formData.append('_csrf', csrfToken);
-
-    const res = await fetch('/admin/edit/' + id, {
-      method: 'POST',
-      body: new URLSearchParams(formData)
-    });
-
-    if (res.ok || res.redirected) {
-      window.location.reload();
-    } else {
-      alert('שגיאה בשמירה. נסה שוב.');
+    try {
+      const tokenRes = await fetch('/admin/csrf-token');
+      const { csrfToken } = await tokenRes.json();
+      const fields = {
+        _csrf: csrfToken,
+        title_he:     document.getElementById('edit_title_he').value,
+        title_en:     document.getElementById('edit_title_en').value,
+        technique_he: document.getElementById('edit_technique_he').value,
+        technique_en: document.getElementById('edit_technique_en').value,
+        year:         document.getElementById('edit_year').value,
+        size:         document.getElementById('edit_size').value,
+        category:     document.getElementById('edit_category').value
+      };
+      const body = Object.entries(fields)
+        .map(([k,v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
+        .join('&');
+      const res = await fetch('/admin/edit/' + id, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+        redirect: 'follow'
+      });
+      if (res.status === 200 || res.redirected) {
+        window.location.reload();
+      } else {
+        const text = await res.text();
+        alert('שגיאה: ' + text);
+      }
+    } catch(err) {
+      alert('שגיאת רשת. נסה שוב.');
     }
   });
 
