@@ -283,6 +283,7 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), paintingValidat
       const file = files[i];
       let imageUrl = file.filename;
       if (cloudinary) {
+        console.log('Upload attempt - secret_len:', (cloudinary.config().api_secret||'').length, 'key:', (cloudinary.config().api_key||'').slice(0,6));
         const result = await cloudinary.uploader.upload(file.path, {
           folder: 'gallery',
           resource_type: 'image'
