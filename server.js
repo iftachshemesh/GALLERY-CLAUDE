@@ -15,9 +15,13 @@ const PORT = process.env.PORT || 10000;
 let cloudinary = null;
 try {
   cloudinary = require('cloudinary').v2;
+  // Cloudinary v2 SDK reads CLOUDINARY_URL automatically
+  // Format: cloudinary://api_key:api_secret@cloud_name
   if (process.env.CLOUDINARY_URL) {
-    // Auto-configure from CLOUDINARY_URL env var
-    cloudinary.config({ cloudinary_url: process.env.CLOUDINARY_URL });
+    const url = process.env.CLOUDINARY_URL.replace('cloudinary://', '');
+    const [auth, cloud_name] = url.split('@');
+    const [api_key, api_secret] = auth.split(':');
+    cloudinary.config({ cloud_name, api_key, api_secret });
   } else {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
