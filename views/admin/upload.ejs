@@ -158,6 +158,18 @@
       }
     });
   }
+  // ── Fetch fresh CSRF token before submitting ────────────────────────────
+  document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    try {
+      const res = await fetch('/admin/csrf-token');
+      const { csrfToken } = await res.json();
+      document.querySelector('#uploadForm input[name="_csrf"]').value = csrfToken;
+    } catch(err) {
+      console.error('Could not refresh CSRF token', err);
+    }
+    this.submit();
+  });
 </script>
 </body>
 </html>
