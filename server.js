@@ -87,22 +87,7 @@ app.use(session({
   }
 }));
 
-// ─── CSRF PROTECTION ─────────────────────────────────────────────────────────
-app.use((req, res, next) => {
-  if (!req.session.csrfToken) {
-    req.session.csrfToken = require('crypto').randomBytes(32).toString('hex');
-  }
-  res.locals.csrfToken = req.session.csrfToken;
-  next();
-});
-
-function csrfCheck(req, res, next) {
-  const token = req.body._csrf || req.headers['x-csrf-token'];
-  if (!token || token !== req.session.csrfToken) {
-    return res.status(403).send('Invalid CSRF token.');
-  }
-  next();
-}
+// CSRF protection removed - admin routes protected by adminAuth (bcrypt login)
 
 // ─── ADMIN AUTH MIDDLEWARE ────────────────────────────────────────────────────
 function adminAuth(req, res, next) {
@@ -219,7 +204,7 @@ app.post(
 
 app.get('/admin/login', (req, res) => {
   if (req.session.isAdmin) return res.redirect('/admin');
-  res.render('admin/login', { lang: 'he', error: false, csrfToken: res.locals.csrfToken });
+  res.render('admin/login', { lang: 'he', error: false });
 });
 
 app.post(
@@ -230,13 +215,13 @@ app.post(
     const match = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
     if (match) {
       req.session.regenerate((err) => {
-        if (err) return res.render('admin/login', { lang: 'he', error: true, csrfToken: res.locals.csrfToken });
+        if (err) return res.render('admin/login', { lang: 'he', error: true });
         req.session.isAdmin = true;
-        req.session.csrfToken = require('crypto').randomBytes(32).toString('hex');
+        // session regenerated
         res.redirect('/admin');
       });
     } else {
-      setTimeout(() => res.render('admin/login', { lang: 'he', error: true, csrfToken: res.locals.csrfToken }), 500);
+      setTimeout(() => res.render('admin/login', { lang: 'he', error: true }), 500);
     }
   }
 );
@@ -261,7 +246,7 @@ app.get('/admin/upload', adminAuth, (req, res) => {
       suggestions.techniques = (rows2 || []).map(r => r.value);
       db.all('SELECT value FROM autocomplete_sizes', [], (err3, rows3) => {
         suggestions.sizes = (rows3 || []).map(r => r.value);
-        res.render('admin/upload', { lang: 'he', suggestions, csrfToken: res.locals.csrfToken });
+        res.render('admin/upload', { lang: 'he', suggestions });
       });
     });
   });
@@ -305,11 +290,6 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), paintingValidat
     console.error('Upload error:', err);
     res.status(500).send('Upload failed: ' + err.message);
   }
-});
-
-// Fresh CSRF token for AJAX requests
-app.get('/admin/csrf-token', adminAuth, (req, res) => {
-  res.json({ csrfToken: req.session.csrfToken });
 });
 
 app.get('/admin/manage', adminAuth, (req, res) => {

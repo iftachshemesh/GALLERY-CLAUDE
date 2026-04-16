@@ -237,45 +237,13 @@
     document.getElementById('edit_year').value = p.year || '';
     document.getElementById('edit_size').value = p.size || '';
     document.getElementById('edit_category').value = p.category || 'other';
-    document.getElementById('editForm').dataset.id = id;
+    document.getElementById('editForm').action = '/admin/edit/' + id;
     document.getElementById('editModal').style.display = 'flex';
   }
 
-  // Submit edit via AJAX with fresh CSRF token
-  document.getElementById('editForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const id = this.dataset.id;
-    try {
-      const tokenRes = await fetch('/admin/csrf-token');
-      const { csrfToken } = await tokenRes.json();
-      const fields = {
-        _csrf: csrfToken,
-        title_he:     document.getElementById('edit_title_he').value,
-        title_en:     document.getElementById('edit_title_en').value,
-        technique_he: document.getElementById('edit_technique_he').value,
-        technique_en: document.getElementById('edit_technique_en').value,
-        year:         document.getElementById('edit_year').value,
-        size:         document.getElementById('edit_size').value,
-        category:     document.getElementById('edit_category').value
-      };
-      const body = Object.entries(fields)
-        .map(([k,v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
-        .join('&');
-      const res = await fetch('/admin/edit/' + id, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body,
-        redirect: 'follow'
-      });
-      if (res.status === 200 || res.redirected) {
-        window.location.reload();
-      } else {
-        const text = await res.text();
-        alert('שגיאה: ' + text);
-      }
-    } catch(err) {
-      alert('שגיאת רשת. נסה שוב.');
-    }
+  // Simple native form submit - no CSRF needed
+  document.getElementById('editForm').addEventListener('submit', function(e) {
+    // form action is set in openEdit, just let it submit normally
   });
 
   function closeEdit() {

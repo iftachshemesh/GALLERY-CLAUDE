@@ -158,24 +158,6 @@
       }
     });
   }
-  // ── Fetch fresh CSRF token before submitting ────────────────────────────
-  let csrfReady = false;
-  document.getElementById('uploadForm').addEventListener('submit', async function(e) {
-    if (csrfReady) return; // already refreshed, let native submit proceed
-    e.preventDefault();
-    const btn = this.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    btn.textContent = '⏳ מעלה...';
-    try {
-      const res = await fetch('/admin/csrf-token');
-      const { csrfToken } = await res.json();
-      document.querySelector('#uploadForm input[name="_csrf"]').value = csrfToken;
-    } catch(err) {
-      console.error('Could not refresh CSRF token', err);
-    }
-    csrfReady = true;
-    this.submit(); // native submit, bypasses event listener
-  });
 </script>
 </body>
 </html>
