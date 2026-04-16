@@ -6,28 +6,36 @@
   <title><%= lang === 'he' ? 'גלריה — ד"ר יפתח שמש' : 'Gallery — Dr. Iftach Shemesh' %></title>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-    /* Zoom hint overlay on painting cards */
+    /* Zoom hint using pseudo-element on card-img-wrap */
     .card-img-wrap {
       position: relative;
+      display: block;
       overflow: hidden;
     }
-    .card-img-wrap .zoom-hint {
+    .card-img-wrap img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+    .card-img-wrap::after {
+      content: '🔍';
       position: absolute;
       inset: 0;
-      background: rgba(26,22,18,0.45);
-      display: flex; align-items: center; justify-content: center;
+      background: rgba(26, 22, 18, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: white;
       opacity: 0;
       transition: opacity 0.25s;
-      pointer-events: none;
     }
-    .card-img-wrap .zoom-hint span {
-      color: white;
-      font-size: 2.5rem;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    }
-    .painting-card:hover .zoom-hint { opacity: 1; }
+    .painting-card:hover .card-img-wrap::after { opacity: 1; }
+    .painting-card:hover .card-img-wrap img { transform: scale(1.04); }
 
-    /* Hint text below section heading */
+    /* Hint text under section heading */
     .zoom-tip {
       font-size: 0.78rem;
       color: var(--muted);
@@ -83,7 +91,6 @@
       %>
       <div class="painting-card" onclick="openLightbox('<%= cat %>', <%= i %>)" style="cursor:zoom-in">
         <div class="card-img-wrap">
-          <div class="zoom-hint"><span>🔍</span></div>
           <img src="<%= imgSrc %>"
              alt="<%= lang === 'he' ? (p.title_he||'') : (p.title_en||'') %>"
              loading="lazy">
