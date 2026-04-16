@@ -16,93 +16,96 @@
       <a href="/admin/manage" class="btn btn-dark btn-sm">← לרשימת הציורים</a>
     </div>
 
-    <% if (locals.saved) { %>
-    <div class="alert alert-success" style="margin-bottom:1.5rem;">✓ הקבצים הועלו בהצלחה!</div>
-    <% } %>
+    <div id="successMsg" class="alert alert-success" style="display:none; margin-bottom:1.5rem;">✓ הקבצים הועלו בהצלחה!</div>
+    <div id="errorMsg" class="alert alert-danger" style="display:none; margin-bottom:1.5rem;"></div>
 
     <div class="admin-card">
-      <form method="POST" action="/admin/upload" enctype="multipart/form-data" id="uploadForm">
+      <div id="progressBar" style="display:none; margin-bottom:1rem;">
+        <div style="background:#f0ebe0; border-radius:4px; height:12px; overflow:hidden;">
+          <div id="progressFill" style="background:#c9a84c; height:100%; width:0%; transition:width 0.3s;"></div>
+        </div>
+        <p id="progressText" style="font-size:0.85rem; color:var(--muted); margin-top:0.4rem;">מעלה...</p>
+      </div>
 
+      <!-- Category -->
+      <div class="form-group">
+        <label>קבוצה</label>
+        <select name="category" id="categorySelect" style="width:100%;padding:0.75rem 1rem;border:1px solid #d9d0c0;border-radius:3px;font-size:0.95rem;background:white;" onchange="onCategoryChange(this.value)">
+          <option value="acrylic">אקריליק</option>
+          <option value="pastel">פסטל</option>
+          <option value="charcoal">פחם</option>
+          <option value="other">אחר</option>
+          <option value="exhibitions">תערוכות וכתבות</option>
+        </select>
+      </div>
 
-        <!-- Category -->
+      <!-- Upload zone -->
+      <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" name="images" multiple accept="image/*" onchange="previewFiles(this)">
+        <div style="font-size:2rem; margin-bottom:0.5rem;" id="uploadIcon">📷</div>
+        <p id="uploadHint">לחץ לבחירת תמונות או גרור לכאן</p>
+        <p style="font-size:0.8rem; margin-top:0.3rem; color:var(--muted);" id="uploadSub">ניתן לבחור מספר קבצים בו זמנית</p>
+      </div>
+      <div class="upload-previews" id="previews"></div>
+
+      <hr style="margin:1.5rem 0; border-color:var(--border);">
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1rem;">
+        פרטים אלה יחולו על כל הקבצים שהועלו. ניתן לערוך כל פריט בנפרד לאחר ההעלאה.
+      </p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
         <div class="form-group">
-          <label>קבוצה</label>
-          <select name="category" id="categorySelect" style="width:100%;padding:0.75rem 1rem;border:1px solid #d9d0c0;border-radius:3px;font-size:0.95rem;background:white;" onchange="onCategoryChange(this.value)">
-            <option value="acrylic">אקריליק</option>
-            <option value="pastel">פסטל</option>
-            <option value="charcoal">פחם</option>
-            <option value="other">אחר</option>
-            <option value="exhibitions">תערוכות וכתבות</option>
-          </select>
+          <label>כותרת (עברית)</label>
+          <input type="text" id="title_he" list="titles-list" placeholder="שם הציור / הכתבה">
         </div>
-
-        <!-- Upload zone -->
-        <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-          <input type="file" id="fileInput" name="images" multiple accept="image/*" onchange="previewFiles(this)">
-          <div style="font-size:2rem; margin-bottom:0.5rem;" id="uploadIcon">📷</div>
-          <p id="uploadHint">לחץ לבחירת תמונות או גרור לכאן</p>
-          <p style="font-size:0.8rem; margin-top:0.3rem; color:var(--muted);" id="uploadSub">ניתן לבחור מספר קבצים בו זמנית</p>
+        <div class="form-group">
+          <label>Title (English)</label>
+          <input type="text" id="title_en" list="titles-list" placeholder="Painting / article title">
         </div>
-        <div class="upload-previews" id="previews"></div>
-
-        <hr style="margin:1.5rem 0; border-color:var(--border);">
-        <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1rem;">
-          פרטים אלה יחולו על כל הקבצים שהועלו. ניתן לערוך כל פריט בנפרד לאחר ההעלאה.
-        </p>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-          <div class="form-group">
-            <label>כותרת (עברית)</label>
-            <input type="text" name="title_he" list="titles-list" placeholder="שם הציור / הכתבה">
-          </div>
-          <div class="form-group">
-            <label>Title (English)</label>
-            <input type="text" name="title_en" list="titles-list" placeholder="Painting / article title">
-          </div>
-          <div class="form-group">
-            <label>טכניקה (עברית)</label>
-            <input type="text" name="technique_he" list="techniques-list" placeholder="למשל: אקריליק על בד">
-          </div>
-          <div class="form-group">
-            <label>Technique (English)</label>
-            <input type="text" name="technique_en" list="techniques-list" placeholder="e.g. Acrylic on canvas">
-          </div>
-          <div class="form-group">
-            <label>שנה</label>
-            <input type="text" name="year" placeholder="2024">
-          </div>
-          <div class="form-group">
-            <label>גודל</label>
-            <input type="text" name="size" list="sizes-list" placeholder="60x80 ס״מ">
-          </div>
+        <div class="form-group">
+          <label>טכניקה (עברית)</label>
+          <input type="text" id="technique_he" list="techniques-list" placeholder="למשל: אקריליק על בד">
         </div>
-
-        <datalist id="titles-list">
-          <% (suggestions.titles||[]).forEach(t => { %><option value="<%= t %>"><% }) %>
-        </datalist>
-        <datalist id="techniques-list">
-          <% (suggestions.techniques||[]).forEach(t => { %><option value="<%= t %>"><% }) %>
-        </datalist>
-        <datalist id="sizes-list">
-          <% (suggestions.sizes||[]).forEach(s => { %><option value="<%= s %>"><% }) %>
-        </datalist>
-
-        <div style="display:flex; gap:1rem; margin-top:1.5rem; flex-wrap:wrap;">
-          <button type="submit" class="btn btn-gold">⬆️ העלה קבצים</button>
-          <a href="/admin/manage" class="btn btn-dark">← לרשימת הציורים לעריכה</a>
+        <div class="form-group">
+          <label>Technique (English)</label>
+          <input type="text" id="technique_en" list="techniques-list" placeholder="e.g. Acrylic on canvas">
         </div>
-      </form>
+        <div class="form-group">
+          <label>שנה</label>
+          <input type="text" id="year" placeholder="2024">
+        </div>
+        <div class="form-group">
+          <label>גודל</label>
+          <input type="text" id="size" list="sizes-list" placeholder="60x80 ס״מ">
+        </div>
+      </div>
+
+      <datalist id="titles-list">
+        <% (suggestions.titles||[]).forEach(t => { %><option value="<%= t %>"><% }) %>
+      </datalist>
+      <datalist id="techniques-list">
+        <% (suggestions.techniques||[]).forEach(t => { %><option value="<%= t %>"><% }) %>
+      </datalist>
+      <datalist id="sizes-list">
+        <% (suggestions.sizes||[]).forEach(s => { %><option value="<%= s %>"><% }) %>
+      </datalist>
+
+      <div style="display:flex; gap:1rem; margin-top:1.5rem; flex-wrap:wrap;">
+        <button type="button" class="btn btn-gold" id="uploadBtn" onclick="doUpload()">⬆️ העלה קבצים</button>
+        <a href="/admin/manage" class="btn btn-dark">← לרשימת הציורים לעריכה</a>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-  // ── שינוי סוג קובץ לפי קטגוריה ──────────────────────────────────────────
+  const CLOUDINARY_CLOUD = 'dd6wpwsae';
+  const CLOUDINARY_PRESET = 'stvk6me5';
+
   function onCategoryChange(cat) {
     const input = document.getElementById('fileInput');
     const icon  = document.getElementById('uploadIcon');
     const hint  = document.getElementById('uploadHint');
-
     if (cat === 'exhibitions') {
       input.accept = 'image/*,.html,.htm';
       icon.textContent = '📄';
@@ -112,12 +115,10 @@
       icon.textContent = '📷';
       hint.textContent = 'לחץ לבחירת תמונות או גרור לכאן';
     }
-    // נקה תצוגה מקדימה בכל מעבר קטגוריה
     document.getElementById('previews').innerHTML = '';
     input.value = '';
   }
 
-  // ── Drag & drop ──────────────────────────────────────────────────────────
   const zone = document.getElementById('dropZone');
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.background='#faf7ef'; });
   zone.addEventListener('dragleave', () => zone.style.background='');
@@ -130,17 +131,11 @@
     previewFiles(input);
   });
 
-  // ── תצוגה מקדימה ─────────────────────────────────────────────────────────
   function previewFiles(input) {
     const container = document.getElementById('previews');
     container.innerHTML = '';
-
     Array.from(input.files).forEach(file => {
-      const isImage = file.type.startsWith('image/');
-      const isHtml  = file.name.toLowerCase().endsWith('.html') || file.name.toLowerCase().endsWith('.htm');
-
-      if (isImage) {
-        // תצוגה מקדימה של תמונה
+      if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = e => {
           const img = document.createElement('img');
@@ -148,15 +143,84 @@
           container.appendChild(img);
         };
         reader.readAsDataURL(file);
-
-      } else if (isHtml) {
-        // תצוגה מקדימה של קובץ HTML — מציג שם קובץ בלבד
+      } else {
         const box = document.createElement('div');
         box.style.cssText = 'display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1rem;background:#f5f0e8;border:1px solid #d9d0c0;border-radius:4px;margin:0.3rem;font-size:0.9rem;';
         box.innerHTML = `<span style="font-size:1.3rem;">📄</span><span>${file.name}</span>`;
         container.appendChild(box);
       }
     });
+  }
+
+  async function doUpload() {
+    const files = document.getElementById('fileInput').files;
+    if (!files.length) { alert('יש לבחור קבצים תחילה'); return; }
+
+    const btn = document.getElementById('uploadBtn');
+    btn.disabled = true;
+    document.getElementById('errorMsg').style.display = 'none';
+    document.getElementById('successMsg').style.display = 'none';
+    document.getElementById('progressBar').style.display = 'block';
+
+    const meta = {
+      category:     document.getElementById('categorySelect').value,
+      title_he:     document.getElementById('title_he').value,
+      title_en:     document.getElementById('title_en').value,
+      technique_he: document.getElementById('technique_he').value,
+      technique_en: document.getElementById('technique_en').value,
+      year:         document.getElementById('year').value,
+      size:         document.getElementById('size').value,
+    };
+
+    const total = files.length;
+    let done = 0;
+
+    for (const file of files) {
+      // 1. Upload to Cloudinary directly from browser (unsigned)
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', CLOUDINARY_PRESET);
+
+      let imageUrl;
+      try {
+        const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+          method: 'POST', body: fd
+        });
+        const data = await r.json();
+        if (data.error) throw new Error(data.error.message);
+        imageUrl = data.secure_url;
+      } catch(e) {
+        document.getElementById('errorMsg').textContent = 'שגיאה בהעלאה ל-Cloudinary: ' + e.message;
+        document.getElementById('errorMsg').style.display = 'block';
+        btn.disabled = false;
+        return;
+      }
+
+      // 2. Save URL + metadata to database via server
+      const saveResp = await fetch('/admin/save-painting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...meta, imageUrl })
+      });
+      if (!saveResp.ok) {
+        document.getElementById('errorMsg').textContent = 'שגיאה בשמירה למסד נתונים';
+        document.getElementById('errorMsg').style.display = 'block';
+        btn.disabled = false;
+        return;
+      }
+
+      done++;
+      const pct = Math.round(done / total * 100);
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressText').textContent = `הועלו ${done} מתוך ${total}...`;
+    }
+
+    document.getElementById('progressBar').style.display = 'none';
+    document.getElementById('successMsg').style.display = 'block';
+    document.getElementById('previews').innerHTML = '';
+    document.getElementById('fileInput').value = '';
+    btn.disabled = false;
+    setTimeout(() => window.location.href = '/admin/manage', 1500);
   }
 </script>
 </body>

@@ -306,6 +306,35 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), paintingValidat
   }
 });
 
+// ─── SAVE PAINTING (called by browser-side Cloudinary upload) ────────────────
+app.post('/admin/save-painting', adminAuth, express.json(), [
+  body('title_he').trim().isLength({ max: 500 }).escape(),
+  body('title_en').trim().isLength({ max: 500 }).escape(),
+  body('technique_he').trim().isLength({ max: 500 }).escape(),
+  body('technique_en').trim().isLength({ max: 500 }).escape(),
+  body('year').trim().isLength({ max: 4 }).matches(/^\d{0,4}$/),
+  body('size').trim().isLength({ max: 100 }).escape(),
+  body('category').trim().isIn(['acrylic', 'pastel', 'charcoal', 'other', 'exhibitions']),
+  body('imageUrl').trim().isURL()
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ ok: false, error: 'Invalid input' });
+  const { title_he, title_en, technique_he, technique_en, year, size, category, imageUrl } = req.body;
+  if (title_he) db.run('INSERT INTO autocomplete_titles (value) VALUES ($1) ON CONFLICT DO NOTHING', [title_he]);
+  if (title_en) db.run('INSERT INTO autocomplete_titles (value) VALUES ($1) ON CONFLICT DO NOTHING', [title_en]);
+  if (technique_he) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_he]);
+  if (technique_en) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_en]);
+  if (size) db.run('INSERT INTO autocomplete_sizes (value) VALUES ($1) ON CONFLICT DO NOTHING', [size]);
+  db.run(
+    'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+    [title_he||'', title_en||'', technique_he||'', technique_en||'', year||'', size||'', category||'other', imageUrl, 0],
+    (err) => {
+      if (err) return res.status(500).json({ ok: false, error: err.message });
+      res.json({ ok: true });
+    }
+  );
+});
+
 app.get('/admin/manage', adminAuth, (req, res) => {
   db.all('SELECT * FROM paintings ORDER BY category, sort_order ASC, id ASC', [], (err, rows) => {
     const suggestions = {};
@@ -394,5 +423,3 @@ app.post('/admin/about',
 );
 
 app.listen(PORT, () => console.log(`Gallery running on port ${PORT}`));
-
-// redeploy 04/16/2026 23:14:38
