@@ -15,18 +15,11 @@ const PORT = process.env.PORT || 10000;
 let cloudinary = null;
 try {
   cloudinary = require('cloudinary').v2;
-  // Cloudinary v2 SDK reads CLOUDINARY_URL automatically
-  // Format: cloudinary://api_key:api_secret@cloud_name
-  if (process.env.CLOUDINARY_URL) {
-    const raw = process.env.CLOUDINARY_URL.replace('cloudinary://', '');
-    const atIdx = raw.lastIndexOf('@');
-    const cloud_name = raw.substring(atIdx + 1);
-    const auth = raw.substring(0, atIdx);
-    const colonIdx = auth.indexOf(':');
-    const api_key = auth.substring(0, colonIdx);
-    const api_secret = auth.substring(colonIdx + 1);
-    cloudinary.config({ cloud_name, api_key, api_secret });
-    console.log('Cloudinary cloud:', cloud_name, 'key:', api_key.substring(0,6) + '...');
+  // Parse CLOUDINARY_URL: cloudinary://api_key:api_secret@cloud_name
+  const cUrl = process.env.CLOUDINARY_URL || '';
+  const cMatch = cUrl.match(/^cloudinary:\/\/([^:]+):(.+)@(.+)$/);
+  if (cMatch) {
+    cloudinary.config({ api_key: cMatch[1], api_secret: cMatch[2], cloud_name: cMatch[3] });
   } else {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -34,6 +27,7 @@ try {
       api_secret: process.env.CLOUDINARY_API_SECRET
     });
   }
+  console.log('Cloudinary cloud:', cloudinary.config().cloud_name, 'key:', (cloudinary.config().api_key||'').substring(0,6));
   console.log('Cloudinary configured.');
 } catch(e) {
   console.warn('Cloudinary not available:', e.message);
