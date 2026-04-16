@@ -253,37 +253,57 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), paintingValidat
   if (technique_he) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_he]);
   if (technique_en) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_en]);
   if (size) db.run('INSERT INTO autocomplete_sizes (value) VALUES ($1) ON CONFLICT DO NOTHING', [size]);
-  // Upload is now handled browser-side via /admin/save-painting
-  res.redirect('/admin/upload');
-});
-
-// ─── SAVE PAINTING (called by browser-side Cloudinary upload) ────────────────
-app.post('/admin/save-painting', adminAuth, express.json(), [
-  body('title_he').trim().isLength({ max: 500 }).escape(),
-  body('title_en').trim().isLength({ max: 500 }).escape(),
-  body('technique_he').trim().isLength({ max: 500 }).escape(),
-  body('technique_en').trim().isLength({ max: 500 }).escape(),
-  body('year').trim().isLength({ max: 4 }).matches(/^\d{0,4}$/),
-  body('size').trim().isLength({ max: 100 }).escape(),
-  body('category').trim().isIn(['acrylic', 'pastel', 'charcoal', 'other', 'exhibitions']),
-  body('imageUrl').trim().isURL()
-], (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ ok: false, error: 'Invalid input' });
-  const { title_he, title_en, technique_he, technique_en, year, size, category, imageUrl } = req.body;
-  if (title_he) db.run('INSERT INTO autocomplete_titles (value) VALUES ($1) ON CONFLICT DO NOTHING', [title_he]);
-  if (title_en) db.run('INSERT INTO autocomplete_titles (value) VALUES ($1) ON CONFLICT DO NOTHING', [title_en]);
-  if (technique_he) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_he]);
-  if (technique_en) db.run('INSERT INTO autocomplete_techniques (value) VALUES ($1) ON CONFLICT DO NOTHING', [technique_en]);
-  if (size) db.run('INSERT INTO autocomplete_sizes (value) VALUES ($1) ON CONFLICT DO NOTHING', [size]);
-  db.run(
-    'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
-    [title_he||'', title_en||'', technique_he||'', technique_en||'', year||'', size||'', category||'other', imageUrl, 0],
-    (err) => {
-      if (err) return res.status(500).json({ ok: false, error: err.message });
-      res.json({ ok: true });
+  if (files.length === 0) return res.redirect('/admin/upload');
+  try {
+    let done = 0;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      let imageUrl = file.filename;
+      try {
+        const FormData = require('form-data');
+        const https = require('https');
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(file.path), file.originalname);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        const uploadResult = await new Promise((resolve, reject) => {
+          const req2 = https.request({
+            hostname: 'api.cloudinary.com',
+            path: `/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            method: 'POST',
+            headers: formData.getHeaders()
+          }, (res2) => {
+            let data = '';
+            res2.on('data', chunk => data += chunk);
+            res2.on('end', () => {
+              try { resolve(JSON.parse(data)); }
+              catch(e) { reject(new Error('Bad response: ' + data)); }
+            });
+          });
+          req2.on('error', reject);
+          formData.pipe(req2);
+        });
+        if (uploadResult.error) throw new Error(uploadResult.error.message);
+        fs.unlink(file.path, () => {});
+        imageUrl = uploadResult.secure_url;
+        console.log('Cloudinary upload OK:', imageUrl);
+      } catch (uploadErr) {
+        console.error('Cloudinary upload error:', uploadErr.message);
+        // fall back to local filename if upload fails
+      }
+      await new Promise((resolve, reject) => {
+        db.run(
+          'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+          [title_he || '', title_en || '', technique_he || '', technique_en || '', year || '', size || '', category || 'other', imageUrl, i],
+          (err) => { if (err) reject(err); else resolve(); }
+        );
+      });
+      done++;
+      if (done === files.length) res.redirect('/admin/manage');
     }
-  );
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).send('Upload failed: ' + err.message);
+  }
 });
 
 app.get('/admin/manage', adminAuth, (req, res) => {
