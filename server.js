@@ -274,6 +274,11 @@ app.post('/admin/upload', adminAuth, csrfCheck, upload.array('images', 50), pain
   });
 });
 
+// Fresh CSRF token for AJAX requests
+app.get('/admin/csrf-token', adminAuth, (req, res) => {
+  res.json({ csrfToken: req.session.csrfToken });
+});
+
 app.get('/admin/manage', adminAuth, (req, res) => {
   db.all('SELECT * FROM paintings ORDER BY category, sort_order ASC, id ASC', [], (err, rows) => {
     const suggestions = {};

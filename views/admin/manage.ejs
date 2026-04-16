@@ -9,20 +9,21 @@
     /* Enlarged thumbnails */
     .thumb-cell {
       position: relative;
-      width: 100px;
+      width: 110px !important;
     }
-    .thumb-img {
-      width: 90px;
-      height: 70px;
-      object-fit: cover;
-      border-radius: 4px;
-      cursor: zoom-in;
-      display: block;
-      border: 2px solid #d9d0c0;
-      transition: border-color 0.2s;
+    .thumb-img,
+    .paintings-table td img {
+      width: 100px !important;
+      height: 80px !important;
+      object-fit: cover !important;
+      border-radius: 4px !important;
+      cursor: zoom-in !important;
+      display: block !important;
+      border: 2px solid #d9d0c0 !important;
+      transition: border-color 0.2s !important;
     }
     .thumb-img:hover {
-      border-color: var(--gold, #c9a84c);
+      border-color: var(--gold, #c9a84c) !important;
     }
 
     /* Hover popup preview */
@@ -128,6 +129,7 @@
       <button onclick="closeEdit()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--muted);">✕</button>
     </div>
     <form id="editForm" method="POST">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
         <div class="form-group">
           <label>כותרת עברית</label>
@@ -225,7 +227,7 @@
     });
   }
 
-  function openEdit(id) {
+  async function openEdit(id) {
     const p = paintings.find(x => x.id === id);
     if (!p) return;
     document.getElementById('edit_title_he').value = p.title_he || '';
@@ -235,9 +237,33 @@
     document.getElementById('edit_year').value = p.year || '';
     document.getElementById('edit_size').value = p.size || '';
     document.getElementById('edit_category').value = p.category || 'other';
-    document.getElementById('editForm').action = '/admin/edit/' + id;
+    document.getElementById('editForm').dataset.id = id;
     document.getElementById('editModal').style.display = 'flex';
   }
+
+  // Submit edit via AJAX with fresh CSRF token
+  document.getElementById('editForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id = this.dataset.id;
+
+    // Fetch fresh CSRF token
+    const tokenRes = await fetch('/admin/csrf-token');
+    const { csrfToken } = await tokenRes.json();
+
+    const formData = new FormData(this);
+    formData.append('_csrf', csrfToken);
+
+    const res = await fetch('/admin/edit/' + id, {
+      method: 'POST',
+      body: new URLSearchParams(formData)
+    });
+
+    if (res.ok || res.redirected) {
+      window.location.reload();
+    } else {
+      alert('שגיאה בשמירה. נסה שוב.');
+    }
+  });
 
   function closeEdit() {
     document.getElementById('editModal').style.display = 'none';
