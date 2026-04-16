@@ -18,10 +18,15 @@ try {
   // Cloudinary v2 SDK reads CLOUDINARY_URL automatically
   // Format: cloudinary://api_key:api_secret@cloud_name
   if (process.env.CLOUDINARY_URL) {
-    const url = process.env.CLOUDINARY_URL.replace('cloudinary://', '');
-    const [auth, cloud_name] = url.split('@');
-    const [api_key, api_secret] = auth.split(':');
+    const raw = process.env.CLOUDINARY_URL.replace('cloudinary://', '');
+    const atIdx = raw.lastIndexOf('@');
+    const cloud_name = raw.substring(atIdx + 1);
+    const auth = raw.substring(0, atIdx);
+    const colonIdx = auth.indexOf(':');
+    const api_key = auth.substring(0, colonIdx);
+    const api_secret = auth.substring(colonIdx + 1);
     cloudinary.config({ cloud_name, api_key, api_secret });
+    console.log('Cloudinary cloud:', cloud_name, 'key:', api_key.substring(0,6) + '...');
   } else {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
