@@ -15,24 +15,25 @@ const PORT = process.env.PORT || 10000;
 let cloudinary = null;
 try {
   cloudinary = require('cloudinary').v2;
-  // Parse CLOUDINARY_URL manually
   const cUrl = process.env.CLOUDINARY_URL || '';
-  if (cUrl.startsWith('cloudinary://')) {
-    const withoutScheme = cUrl.slice('cloudinary://'.length);
+  if (cUrl.includes('@')) {
+    const withoutScheme = cUrl.replace('cloudinary://', '');
     const atPos = withoutScheme.lastIndexOf('@');
-    const cloud_name = withoutScheme.slice(atPos + 1);
+    const cloud_name = withoutScheme.slice(atPos + 1).trim();
     const credentials = withoutScheme.slice(0, atPos);
     const colonPos = credentials.indexOf(':');
-    const api_key = credentials.slice(0, colonPos);
-    const api_secret = credentials.slice(colonPos + 1);
+    const api_key = credentials.slice(0, colonPos).trim();
+    const api_secret = credentials.slice(colonPos + 1).trim();
     cloudinary.config({ cloud_name, api_key, api_secret });
-    console.log('Cloudinary OK - cloud:', cloud_name, 'key:', api_key.slice(0,6), 'secret_len:', api_secret.length);
+    console.log('Cloudinary URL parsed - cloud:', cloud_name, 'key:', api_key.slice(0,6), 'secret_len:', api_secret.length, 'secret_start:', JSON.stringify(api_secret.slice(0,5)));
   } else {
     cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key:    process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET
+      cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || '').trim(),
+      api_key: (process.env.CLOUDINARY_API_KEY || '').trim(),
+      api_secret: (process.env.CLOUDINARY_API_SECRET || '').trim()
     });
+    const cfg = cloudinary.config();
+    console.log('Cloudinary env vars - cloud:', cfg.cloud_name, 'key:', (cfg.api_key||'').slice(0,6), 'secret_len:', (cfg.api_secret||'').length, 'secret_start:', JSON.stringify((cfg.api_secret||'').slice(0,5)));
   }
   console.log('Cloudinary configured.');
 } catch(e) {
@@ -283,7 +284,8 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), paintingValidat
       const file = files[i];
       let imageUrl = file.filename;
       if (cloudinary) {
-        console.log('Upload attempt - secret_len:', (cloudinary.config().api_secret||'').length, 'key:', (cloudinary.config().api_key||'').slice(0,6));
+        const cfg = cloudinary.config();
+        console.log('Upload attempt - cloud:', cfg.cloud_name, 'key:', (cfg.api_key||'').slice(0,6), 'secret_len:', (cfg.api_secret||'').length, 'secret_start:', (cfg.api_secret||'').slice(0,4));
         const result = await cloudinary.uploader.upload(file.path, {
           folder: 'gallery',
           resource_type: 'image'
