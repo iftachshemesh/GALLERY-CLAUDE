@@ -11,31 +11,10 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ─── CLOUDINARY CONFIG ────────────────────────────────────────────────────────
-let cloudinary = null;
-try {
-  cloudinary = require('cloudinary').v2;
-  // Use SHA256 signing (required for newer Cloudinary accounts)
-  cloudinary.config({ signature_algorithm: 'sha256' });
-  // v2 SDK reads CLOUDINARY_URL automatically
-  const cfg = cloudinary.config();
-  if (!cfg.api_key) {
-    // Manual parse as fallback
-    const cUrl = process.env.CLOUDINARY_URL || '';
-    const withoutScheme = cUrl.replace('cloudinary://', '');
-    const atPos = withoutScheme.lastIndexOf('@');
-    const cloud_name = withoutScheme.slice(atPos + 1).trim();
-    const credentials = withoutScheme.slice(0, atPos);
-    const colonPos = credentials.indexOf(':');
-    const api_key = credentials.slice(0, colonPos).trim();
-    const api_secret = credentials.slice(colonPos + 1).trim();
-    cloudinary.config({ cloud_name, api_key, api_secret });
-  }
-  const c = cloudinary.config();
-  console.log('Cloudinary ready - cloud:', c.cloud_name, 'key:', (c.api_key||'').slice(0,6), 'secret_len:', (c.api_secret||'').length);
-} catch(e) {
-  console.warn('Cloudinary not available:', e.message);
-}
+// ─── CLOUDINARY CONFIG (unsigned upload) ─────────────────────────────────────
+const CLOUDINARY_CLOUD_NAME = 'dd6wpwsae';
+const CLOUDINARY_UPLOAD_PRESET = 'stvk6me5'; // unsigned preset
+console.log('Cloudinary configured - cloud:', CLOUDINARY_CLOUD_NAME, 'preset:', CLOUDINARY_UPLOAD_PRESET);
 
 // ─── ADMIN PASSWORD ───────────────────────────────────────────────────────────
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
@@ -280,15 +259,36 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), paintingValidat
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       let imageUrl = file.filename;
-      if (cloudinary) {
-        const cfg = cloudinary.config();
-        console.log('Upload attempt - cloud:', cfg.cloud_name, 'key:', (cfg.api_key||'').slice(0,6), 'secret_len:', (cfg.api_secret||'').length, 'secret_start:', (cfg.api_secret||'').slice(0,4));
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: 'gallery',
-          resource_type: 'image'
+      try {
+        const FormData = require('form-data');
+        const https = require('https');
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(file.path), file.originalname);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        const uploadResult = await new Promise((resolve, reject) => {
+          const req2 = https.request({
+            hostname: 'api.cloudinary.com',
+            path: `/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            method: 'POST',
+            headers: formData.getHeaders()
+          }, (res2) => {
+            let data = '';
+            res2.on('data', chunk => data += chunk);
+            res2.on('end', () => {
+              try { resolve(JSON.parse(data)); }
+              catch(e) { reject(new Error('Bad response: ' + data)); }
+            });
+          });
+          req2.on('error', reject);
+          formData.pipe(req2);
         });
+        if (uploadResult.error) throw new Error(uploadResult.error.message);
         fs.unlink(file.path, () => {});
-        imageUrl = result.secure_url;
+        imageUrl = uploadResult.secure_url;
+        console.log('Cloudinary upload OK:', imageUrl);
+      } catch (uploadErr) {
+        console.error('Cloudinary upload error:', uploadErr.message);
+        // fall back to local filename if upload fails
       }
       await new Promise((resolve, reject) => {
         db.run(
