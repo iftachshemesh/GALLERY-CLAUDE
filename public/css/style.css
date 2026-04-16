@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════════════
-   GALLERY DR. YIFTACH SHEMESH — MAIN STYLESHEET
-   ═══════════════════════════════════════════════ */
+/* âââââââââââââââââââââââââââââââââââââââââââââââ
+   GALLERY DR. YIFTACH SHEMESH â MAIN STYLESHEET
+   âââââââââââââââââââââââââââââââââââââââââââââââ */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Heebo:wght@300;400;500&display=swap');
 
@@ -30,10 +30,10 @@ body {
 body[dir="rtl"] { direction: rtl; text-align: right; }
 body[dir="ltr"] { direction: ltr; text-align: left; }
 
-/* ─── TYPOGRAPHY ─── */
+/* âââ TYPOGRAPHY âââ */
 h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 
-/* ─── NAV ─── */
+/* âââ NAV âââ */
 .site-nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; justify-content: space-between; align-items: center;
@@ -61,7 +61,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 }
 .lang-toggle:hover { background: var(--gold); color: var(--dark); }
 
-/* ─── HERO ─── */
+/* âââ HERO âââ */
 .hero {
   position: relative; height: 100vh; overflow: hidden;
   display: flex; align-items: center;
@@ -107,7 +107,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
   .hero-title { font-size: 1.6rem; }
 }
 
-/* ─── BUTTONS ─── */
+/* âââ BUTTONS âââ */
 .btn {
   display: inline-block; padding: 0.7rem 1.8rem;
   text-decoration: none; font-size: 0.85rem;
@@ -130,7 +130,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 .btn-dark:hover { background: var(--charcoal); }
 .btn-sm { padding: 0.4rem 1rem; font-size: 0.75rem; }
 
-/* ─── PAGE WRAPPER ─── */
+/* âââ PAGE WRAPPER âââ */
 .page-wrapper {
   padding-top: 70px; min-height: 100vh;
 }
@@ -147,7 +147,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 }
 .page-header p { color: var(--muted); font-size: 0.95rem; }
 
-/* ─── GALLERY ─── */
+/* âââ GALLERY âââ */
 .gallery-section {
   padding: 3rem 2rem;
   max-width: 1400px; margin: 0 auto;
@@ -200,7 +200,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
   font-size: 0.78rem; color: var(--muted);
 }
 
-/* ─── LIGHTBOX ─── */
+/* âââ LIGHTBOX âââ */
 .lightbox {
   display: none; position: fixed; inset: 0; z-index: 999;
   background: rgba(10,8,6,0.95);
@@ -235,7 +235,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 .lightbox-prev { left: 1rem; }
 .lightbox-next { right: 1rem; }
 
-/* ─── ABOUT PAGE ─── */
+/* âââ ABOUT PAGE âââ */
 .about-content {
   max-width: 800px; margin: 0 auto;
   padding: 3rem 2rem;
@@ -244,7 +244,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 }
 .about-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 1rem 0; }
 
-/* ─── CONTACT ─── */
+/* âââ CONTACT âââ */
 .contact-wrap {
   max-width: 600px; margin: 0 auto;
   padding: 3rem 2rem;
@@ -268,7 +268,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 }
 .form-group textarea { height: 140px; resize: vertical; }
 
-/* ─── FOOTER ACTIONS ─── */
+/* âââ FOOTER ACTIONS âââ */
 .page-actions {
   display: flex; justify-content: space-between; align-items: center;
   flex-wrap: wrap; gap: 1rem;
@@ -277,7 +277,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
   max-width: 1400px; margin: 0 auto;
 }
 
-/* ─── ACCESSIBILITY WIDGET ─── */
+/* âââ ACCESSIBILITY WIDGET âââ */
 .accessibility-btn {
   position: fixed; bottom: 1.5rem; left: 1.5rem;
   background: var(--dark); color: var(--gold);
@@ -311,7 +311,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 }
 .access-option button:hover { background: var(--gold-light); }
 
-/* ─── LEGAL ─── */
+/* âââ LEGAL âââ */
 .legal-footer {
   text-align: center; padding: 1.5rem;
   font-size: 0.75rem; color: var(--muted);
@@ -319,7 +319,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
   background: var(--dark); color: rgba(255,255,255,0.4);
 }
 
-/* ─── ALERT ─── */
+/* âââ ALERT âââ */
 .alert {
   padding: 1rem 1.5rem; border-radius: 3px; margin-bottom: 1rem;
   font-size: 0.9rem;
@@ -327,7 +327,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
 .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
 .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
-/* ─── ADMIN ─── */
+/* âââ ADMIN âââ */
 .admin-layout {
   display: flex; min-height: 100vh; padding-top: 0;
 }
@@ -376,113 +376,24 @@ body[dir="ltr"] .admin-main { margin-left: 220px; margin-right: 0; }
   vertical-align: middle; font-size: 0.88rem;
 }
 .paintings-table td img {
-  width: 60px; height: 45px; object-fit: cover; border-radius: 2px;
+  width: 90px; height: 70px; object-fit: cover; border-radius: 3px;
 }
 .paintings-table tr:hover td { background: #faf7f2; }
 
 /* Drag handle */
 .drag-handle { cursor: grab; color: var(--muted); font-size: 1.1rem; padding: 0 0.5rem; }
 .drag-handle:active { cursor: grabbing; }
-.sortable-ghost { opacity: 0.4; background: var(--gold-light); }
 
-/* Category tabs */
-.cat-tabs {
-  display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;
-}
+/* ─── CATEGORY TABS ─── */
+.cat-tabs { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; }
 .cat-tab {
-  padding: 0.4rem 1rem; border: 1px solid var(--border);
-  border-radius: 3px; cursor: pointer; font-size: 0.82rem;
-  background: var(--white); transition: all 0.2s;
+  padding:0.4rem 1rem; border-radius:20px; cursor:pointer;
+  background:var(--cream); border:1px solid var(--border);
+  font-size:0.82rem; transition:all 0.2s;
 }
 .cat-tab.active, .cat-tab:hover {
-  background: var(--dark); color: var(--gold); border-color: var(--dark);
+  background:var(--gold); color:var(--dark); border-color:var(--gold);
 }
 
-/* Upload zone */
-.upload-zone {
-  border: 2px dashed var(--gold);
-  border-radius: 6px; padding: 2rem;
-  text-align: center; color: var(--muted);
-  cursor: pointer; transition: all 0.2s; margin-bottom: 1rem;
-}
-.upload-zone:hover { background: #faf7ef; border-color: #b8953e; }
-.upload-zone input[type=file] { display: none; }
-.upload-previews {
-  display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem;
-}
-.upload-previews img {
-  width: 100px; height: 80px; object-fit: cover;
-  border-radius: 3px; border: 1px solid var(--border);
-}
-
-/* Rich text editor */
-.editor-toolbar {
-  display: flex; flex-wrap: wrap; gap: 0.3rem;
-  padding: 0.5rem; background: var(--cream);
-  border: 1px solid var(--border); border-bottom: none;
-  border-radius: 4px 4px 0 0;
-}
-.editor-toolbar button {
-  padding: 0.3rem 0.6rem; background: var(--white);
-  border: 1px solid var(--border); border-radius: 3px;
-  cursor: pointer; font-size: 0.85rem; transition: all 0.15s;
-}
-.editor-toolbar button:hover { background: var(--gold-light); }
-.editor-area {
-  min-height: 250px; padding: 1rem;
-  border: 1px solid var(--border); border-radius: 0 0 4px 4px;
-  outline: none; background: var(--white);
-  font-family: inherit; font-size: 1rem; line-height: 1.8;
-}
-
-/* ─── EXHIBITIONS ─── */
-.exhibitions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem; padding: 2rem;
-  max-width: 1200px; margin: 0 auto;
-}
-@media (max-width: 600px) {
-  .exhibitions-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; padding: 1rem; }
-}
-
-/* ─── MESSAGES ─── */
-.success-box {
-  padding: 2rem; text-align: center;
-  background: #d4edda; border-radius: 6px;
-  margin: 2rem 0; color: #155724;
-}
-
-/* ─── DARK GALLERY BACKGROUND ─── */
-.gallery-page {
-  background: var(--dark);
-  min-height: 100vh;
-}
-.gallery-page .gallery-section {
-  background: var(--dark);
-}
-.gallery-page .gallery-section h2 {
-  color: var(--gold-light);
-}
-.gallery-page .page-header {
-  background: #0f0d0b;
-}
-.gallery-page .painting-card {
-  background: #2d2926;
-  box-shadow: 0 2px 15px rgba(0,0,0,0.3);
-}
-.gallery-page .painting-info .p-title {
-  color: var(--gold-light);
-}
-.gallery-page .painting-info .p-meta {
-  color: #9a8f82;
-}
-.gallery-page .page-actions {
-  background: var(--dark);
-  border-top-color: var(--border);
-}
-.gallery-page .legal-footer {
-  background: #0f0d0b;
-}
-
-
+/* ─── SORTABLE ─── */
+.sortable-ghost { opacity:0.4; background:var(--gold-light); }
