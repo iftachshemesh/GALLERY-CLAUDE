@@ -33,6 +33,35 @@
       margin: 2.5rem auto;
       max-width: 900px;
     }
+
+    /* Exhibitions grid */
+    .exhibitions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    @media (max-width: 600px) {
+      .exhibitions-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        padding: 0 1rem;
+      }
+    }
+    /* Prevent exaggerated zoom on load */
+    .exhibitions-grid .painting-card img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      display: block;
+      transform: none !important;
+      transition: none !important;
+    }
+    .exhibitions-grid .painting-card:hover img {
+      transform: none !important;
+    }
   </style>
 </head>
 <body dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
