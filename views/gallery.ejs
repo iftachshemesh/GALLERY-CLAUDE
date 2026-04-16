@@ -5,6 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= lang === 'he' ? 'גלריה — ד"ר יפתח שמש' : 'Gallery — Dr. Iftach Shemesh' %></title>
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* Zoom hint overlay on painting cards */
+    .card-img-wrap {
+      position: relative;
+      overflow: hidden;
+    }
+    .card-img-wrap .zoom-hint {
+      position: absolute;
+      inset: 0;
+      background: rgba(26,22,18,0.45);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 0.25s;
+      pointer-events: none;
+    }
+    .card-img-wrap .zoom-hint span {
+      color: white;
+      font-size: 2.5rem;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    .painting-card:hover .zoom-hint { opacity: 1; }
+
+    /* Hint text below section heading */
+    .zoom-tip {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: -1rem;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.03em;
+    }
+  </style>
 </head>
 <body class="gallery-page" dir="<%= lang === 'he' ? 'rtl' : 'ltr' %>">
 
@@ -41,6 +72,7 @@
 
   <section class="gallery-section" id="<%= cat %>">
     <h2><%= lang === 'he' ? catLabels[cat].he : catLabels[cat].en %></h2>
+    <p class="zoom-tip"><%= lang === 'he' ? '🔍 לחץ על ציור להגדלה' : '🔍 Click a painting to enlarge' %></p>
     <div class="gallery-grid">
       <% paintings.forEach((p, i) => { %>
       <%
@@ -49,10 +81,13 @@
           : '/uploads/' + p.filename;
         const globalIndex = catOrder.slice(0, catOrder.indexOf(cat)).reduce((sum, c) => sum + (categories[c] ? categories[c].length : 0), 0) + i;
       %>
-      <div class="painting-card" onclick="openLightbox('<%= cat %>', <%= i %>)" style="cursor:pointer">
-        <img src="<%= imgSrc %>"
+      <div class="painting-card" onclick="openLightbox('<%= cat %>', <%= i %>)" style="cursor:zoom-in">
+        <div class="card-img-wrap">
+          <div class="zoom-hint"><span>🔍</span></div>
+          <img src="<%= imgSrc %>"
              alt="<%= lang === 'he' ? (p.title_he||'') : (p.title_en||'') %>"
              loading="lazy">
+        </div>
         <div class="painting-info">
           <% const title = lang === 'he' ? p.title_he : p.title_en; %>
           <% const tech  = lang === 'he' ? p.technique_he : p.technique_en; %>
