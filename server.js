@@ -15,8 +15,11 @@ const PORT = process.env.PORT || 10000;
 let cloudinary = null;
 try {
   cloudinary = require('cloudinary').v2;
-  const cUrl = process.env.CLOUDINARY_URL || '';
-  if (cUrl.includes('@')) {
+  // v2 SDK reads CLOUDINARY_URL automatically
+  const cfg = cloudinary.config();
+  if (!cfg.api_key) {
+    // Manual parse as fallback
+    const cUrl = process.env.CLOUDINARY_URL || '';
     const withoutScheme = cUrl.replace('cloudinary://', '');
     const atPos = withoutScheme.lastIndexOf('@');
     const cloud_name = withoutScheme.slice(atPos + 1).trim();
@@ -25,17 +28,9 @@ try {
     const api_key = credentials.slice(0, colonPos).trim();
     const api_secret = credentials.slice(colonPos + 1).trim();
     cloudinary.config({ cloud_name, api_key, api_secret });
-    console.log('Cloudinary URL parsed - cloud:', cloud_name, 'key:', api_key.slice(0,6), 'secret_len:', api_secret.length, 'secret_start:', JSON.stringify(api_secret.slice(0,5)));
-  } else {
-    cloudinary.config({
-      cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || '').trim(),
-      api_key: (process.env.CLOUDINARY_API_KEY || '').trim(),
-      api_secret: (process.env.CLOUDINARY_API_SECRET || '').trim()
-    });
-    const cfg = cloudinary.config();
-    console.log('Cloudinary env vars - cloud:', cfg.cloud_name, 'key:', (cfg.api_key||'').slice(0,6), 'secret_len:', (cfg.api_secret||'').length, 'secret_start:', JSON.stringify((cfg.api_secret||'').slice(0,5)));
   }
-  console.log('Cloudinary configured.');
+  const c = cloudinary.config();
+  console.log('Cloudinary ready - cloud:', c.cloud_name, 'key:', (c.api_key||'').slice(0,6), 'secret_len:', (c.api_secret||'').length);
 } catch(e) {
   console.warn('Cloudinary not available:', e.message);
 }
