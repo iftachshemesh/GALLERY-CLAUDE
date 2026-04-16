@@ -6,18 +6,24 @@ const nodemailer = require('nodemailer');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const { body, param, validationResult } = require('express-validator');
-const cloudinary = require('cloudinary').v2;
 const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
 // ─── CLOUDINARY CONFIG ────────────────────────────────────────────────────────
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+let cloudinary = null;
+try {
+  cloudinary = require('cloudinary').v2;
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+  console.log('Cloudinary configured.');
+} catch(e) {
+  console.warn('Cloudinary not available:', e.message);
+}
 
 // ─── ADMIN PASSWORD ───────────────────────────────────────────────────────────
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
@@ -276,12 +282,15 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), paintingValidat
     let done = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: 'gallery',
-        resource_type: 'image'
-      });
-      fs.unlink(file.path, () => {});
-      const imageUrl = result.secure_url;
+      let imageUrl = file.filename;
+      if (cloudinary) {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: 'gallery',
+          resource_type: 'image'
+        });
+        fs.unlink(file.path, () => {});
+        imageUrl = result.secure_url;
+      }
       await new Promise((resolve, reject) => {
         db.run(
           'INSERT INTO paintings (title_he, title_en, technique_he, technique_en, year, size, category, filename, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
@@ -293,7 +302,7 @@ app.post('/admin/upload', adminAuth, upload.array('images', 50), paintingValidat
       if (done === files.length) res.redirect('/admin/manage');
     }
   } catch (err) {
-    console.error('Cloudinary upload error:', err);
+    console.error('Upload error:', err);
     res.status(500).send('Upload failed: ' + err.message);
   }
 });
