@@ -22,7 +22,6 @@
       <p class="error">סיסמה שגויה. נסה שנית.</p>
     <% } %>
     <form method="POST" action="/admin/login">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <input type="password" name="password" placeholder="סיסמה" autofocus required>
       <button type="submit">כניסה</button>
     </form>
