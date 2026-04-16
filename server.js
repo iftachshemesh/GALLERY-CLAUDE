@@ -15,6 +15,8 @@ const PORT = process.env.PORT || 10000;
 let cloudinary = null;
 try {
   cloudinary = require('cloudinary').v2;
+  // Force v1 signing algorithm
+  cloudinary.config({ signature_algorithm: 'sha1' });
   // v2 SDK reads CLOUDINARY_URL automatically
   const cfg = cloudinary.config();
   if (!cfg.api_key) {
